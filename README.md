@@ -1,1 +1,0 @@
-# The-Big-Quiz.github.io
