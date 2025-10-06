@@ -261,25 +261,26 @@
 
     // ---------- CSV LOADING ----------
     async function tryLoadCSVForSeason(year){
-      // Looks for data/season-YYYY.csv in the same repo
-      const urlCsv = `data/season-${year}.csv`;
+      const urlCsv = `data/season-${year}.csv?v=${Date.now()}`; // cache-bust GitHub Pages
       try{
         const res = await fetch(urlCsv, {cache:'no-store'});
-        if(!res.ok) throw new Error('No CSV');
+        if(!res.ok) throw new Error(`CSV not found (${res.status})`);
         const text = await res.text();
         const quizzes = parseCSV(text);
         if(!state.seasons[year]) state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
         state.seasons[year].quizzes = quizzes;
         save(state);
         toast(`Loaded CSV for ${year}`);
-      }catch(e){ /* silently ignore if file missing */ }
+      }catch(e){
+        // If missing, keep whatever we already had (demo/local)
+        toast('CSV not found for ' + year)
+        console.warn('CSV load skipped:', e.message);
+      }
     }
-
-    // Basic CSV parser supporting quoted fields
+    
+    // Basic CSV parser supporting quoted fields + BOM-safe + Windows/Mac/Unix newlines
     function parseCSV(text){
-      const lines = text.trim().split(/
-?
-/);
+      const lines = text.replace(/^\uFEFF/,'').trim().split(/\r?\n/);
       if(!lines.length) return [];
       const header = splitCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
       const idx = {
@@ -290,8 +291,9 @@
       };
       const out = [];
       for(let i=1;i<lines.length;i++){
-        if(!lines[i].trim()) continue;
-        const cols = splitCSVLine(lines[i]);
+        const line = lines[i];
+        if(!line || !line.trim()) continue;
+        const cols = splitCSVLine(line);
         const q = {
           date: (cols[idx.date]||'').trim(),
           notes: (cols[idx.notes]||'').trim(),
@@ -302,16 +304,19 @@
       }
       return out;
     }
-
+    
     function splitCSVLine(line){
       const out = []; let cur = ''; let inQ = false;
       for(let i=0;i<line.length;i++){
         const ch = line[i];
-        if(ch==='"'){
-          if(inQ && line[i+1]==='"'){ cur+='"'; i++; }
+        if(ch === '"'){
+          if(inQ && line[i+1] === '"'){ cur += '"'; i++; } // escaped quote
           else inQ = !inQ;
-        } else if(ch===',' && !inQ){ out.push(cur); cur=''; }
-        else { cur+=ch; }
+        } else if(ch === ',' && !inQ){
+          out.push(cur); cur = '';
+        } else {
+          cur += ch;
+        }
       }
       out.push(cur);
       return out;
