@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quiz League — Monday Nights</title>
-  <meta name="description" content="Public record of our Monday quiz results at The Big Quiz held @ The Academy. Seasons by year, quiz history, and leaderboards." />
+  <title>Gorsko Slivovo — Monday Quiz League</title>
+  <meta name="description" content="Public record of Gorsko Slivovo's Monday quiz results at The Big Quiz @ The Academy. Seasons by year, quiz history, and leaderboards." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
@@ -116,8 +116,8 @@
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <div>
-          <h1 class="title glow">Monday Quiz League</h1>
-          <div class="subtitle">Public scoreboard for our Monday weekly quiz results at The Big Quiz held @ The Academy.</div>
+          <h1 class="title glow">Gorsko Slivovo — Monday Quiz League</h1>
+          <div class="subtitle">Public scoreboard for The Big Quiz @ The Academy — one team, seasons by year</div>
         </div>
       </div>
       <div class="controls">
@@ -137,10 +137,10 @@
 
   <main class="wrap">
     <section class="grid">
-      <!-- Leaderboard panel -->
+      <!-- Leaderboard panel (single-team summary) -->
       <div class="panel" id="leaderboardPanel">
         <div class="head">
-          <h2>Leaderboard</h2>
+          <h2>Season Points</h2>
           <div class="controls">
             <select id="metricSelect">
               <option value="total">Total Points</option>
@@ -152,7 +152,7 @@
         <div class="body">
           <table id="leaderboard">
             <thead>
-              <tr><th class="rank">#</th><th>Player</th><th>Quizzes</th><th>Total</th><th>Average</th><th>Best</th></tr>
+              <tr><th class="rank">#</th><th>Team</th><th>Quizzes</th><th>Total</th><th>Average</th><th>Best</th></tr>
             </thead>
             <tbody></tbody>
           </table>
@@ -173,14 +173,14 @@
     <section class="panel">
       <div class="head">
         <h2>Quiz History</h2>
-        <div class="subtitle">Click any quiz to view detailed scores</div>
+        <div class="subtitle">Each entry: points (2–5) and number of teams we competed against</div>
       </div>
       <div class="body" id="quizHistory"></div>
     </section>
   </main>
 
   <footer>
-    Made with 💜 on GitHub Pages. Data is stored in your browser (localStorage). Use Export/Import to back it up or share.
+    Made with 💜 on GitHub Pages. Data can load from <code>data/season-YYYY.csv</code> if present in the repo, else from your browser (localStorage). Use Export/Import for backups.
   </footer>
 
   <!-- Add Quiz Modal -->
@@ -199,21 +199,23 @@
           </div>
           <div>
             <label>Location / Notes
-              <input type="text" id="quizNotes" placeholder="Pub name, special theme, etc." style="width:100%; margin-top:6px">
+              <input type="text" id="quizNotes" placeholder="The Academy, theme, etc." style="width:100%; margin-top:6px">
             </label>
           </div>
         </div>
-
-        <div style="margin-top:16px">
-          <div class="controls" style="justify-content:space-between">
-            <h4 style="margin:0">Players & Scores</h4>
-            <div>
-              <button class="btn ghost" id="btnAddPlayer">+ Add Player</button>
-            </div>
+        <div class="two-col" style="margin-top:12px">
+          <div>
+            <label>Our points (2–5)
+              <input type="number" id="quizPoints" min="2" max="5" step="1" placeholder="e.g. 4" style="width:100%; margin-top:6px">
+            </label>
           </div>
-          <div id="playersList" style="margin-top:10px; display:grid; grid-template-columns: 1.4fr .8fr auto; gap:10px"></div>
+          <div>
+            <label>Teams competing (incl. us)
+              <input type="number" id="quizTeams" min="1" step="1" placeholder="e.g. 12" style="width:100%; margin-top:6px">
+            </label>
+          </div>
         </div>
-
+        <div class="subtitle" id="placePreview" style="margin-top:8px"></div>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px">
           <button class="btn danger" id="btnClearForm" title="Clear the form">Clear</button>
           <button class="btn" id="btnSaveQuiz">Save Quiz</button>
@@ -230,15 +232,17 @@
     const $$ = sel => Array.from(document.querySelectorAll(sel));
     const fmt = n => new Intl.NumberFormat().format(n);
 
-    const STORAGE_KEY = 'quizLeagueData:v1';
+    const STORAGE_KEY = 'quizLeagueData:v2-singleTeam';
+    const TEAM_NAME = 'Gorsko Slivovo';
 
+    // Demo fallback
     const demoData = {
       seasons: {
         '2025': {
-          players: ['Gorsko Slivovo'],
+          team: TEAM_NAME,
           quizzes: [
-            { date:'2025-09-30', notes:'General Knowledge', scores:{ 'Gorsko Slivovo': 2 } },
-            { date:'2025-10-06', notes:'General Knowledge', scores:{ 'Gorsko Slivovo': 4 } }
+            { date:'2025-09-30', notes:'General Knowledge', points: 2, teams: 13 },
+            { date:'2025-10-06', notes:'General Knowledge', points: 4, teams: 18 }
           ]
         }
       },
@@ -250,12 +254,70 @@
     }
     function save(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
-    // ---------- Rendering ----------
+    // ---------- State ----------
     let state = load();
-
     const seasonSelect = $('#seasonSelect');
     const metricSelect = $('#metricSelect');
 
+    // ---------- CSV LOADING ----------
+    async function tryLoadCSVForSeason(year){
+      // Looks for data/season-YYYY.csv in the same repo
+      const urlCsv = `data/season-${year}.csv`;
+      try{
+        const res = await fetch(urlCsv, {cache:'no-store'});
+        if(!res.ok) throw new Error('No CSV');
+        const text = await res.text();
+        const quizzes = parseCSV(text);
+        if(!state.seasons[year]) state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
+        state.seasons[year].quizzes = quizzes;
+        save(state);
+        toast(`Loaded CSV for ${year}`);
+      }catch(e){ /* silently ignore if file missing */ }
+    }
+
+    // Basic CSV parser supporting quoted fields
+    function parseCSV(text){
+      const lines = text.trim().split(/
+?
+/);
+      if(!lines.length) return [];
+      const header = splitCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
+      const idx = {
+        date: header.indexOf('date'),
+        notes: header.indexOf('notes'),
+        points: header.indexOf('points'),
+        teams: header.indexOf('teams')
+      };
+      const out = [];
+      for(let i=1;i<lines.length;i++){
+        if(!lines[i].trim()) continue;
+        const cols = splitCSVLine(lines[i]);
+        const q = {
+          date: (cols[idx.date]||'').trim(),
+          notes: (cols[idx.notes]||'').trim(),
+          points: Number((cols[idx.points]||'').trim()||0),
+          teams: Number((cols[idx.teams]||'').trim()||0)
+        };
+        if(q.date) out.push(q);
+      }
+      return out;
+    }
+
+    function splitCSVLine(line){
+      const out = []; let cur = ''; let inQ = false;
+      for(let i=0;i<line.length;i++){
+        const ch = line[i];
+        if(ch==='"'){
+          if(inQ && line[i+1]==='"'){ cur+='"'; i++; }
+          else inQ = !inQ;
+        } else if(ch===',' && !inQ){ out.push(cur); cur=''; }
+        else { cur+=ch; }
+      }
+      out.push(cur);
+      return out;
+    }
+
+    // ---------- Rendering ----------
     function renderSeasons(){
       const years = Object.keys(state.seasons).sort((a,b)=>b.localeCompare(a));
       seasonSelect.innerHTML = years.map(y=>`<option value="${y}" ${y===state.currentSeason?'selected':''}>${y}</option>`).join('');
@@ -266,38 +328,21 @@
 
     function computeLeaderboard(){
       const s = getSeason();
-      const stats = {};
-      s.players.forEach(p=> stats[p] = { quizzes:0, total:0, best:0 });
-      s.quizzes.forEach(q=>{
-        Object.entries(q.scores).forEach(([p,score])=>{
-          if(!(p in stats)) stats[p] = { quizzes:0, total:0, best:0 };
-          stats[p].quizzes++; stats[p].total += Number(score)||0; stats[p].best = Math.max(stats[p].best, Number(score)||0);
-        })
-      })
-      const rows = Object.entries(stats).map(([p,st])=> ({
-        player:p,
-        quizzes: st.quizzes,
-        total: st.total,
-        average: st.quizzes? st.total / st.quizzes : 0,
-        best: st.best
-      }));
-      return rows;
+      const quizzes = s.quizzes || [];
+      const total = quizzes.reduce((a,q)=> a + (Number(q.points)||0), 0);
+      const best = quizzes.reduce((m,q)=> Math.max(m, Number(q.points)||0), 0);
+      const avg = quizzes.length ? total / quizzes.length : 0;
+      return [{ team: s.team || TEAM_NAME, quizzes: quizzes.length, total, average: avg, best }];
     }
 
     function renderLeaderboard(){
       const tbody = $('#leaderboard tbody');
-      const metric = metricSelect.value;
-      const rows = computeLeaderboard().sort((a,b)=>{
-        if(metric==='total') return b.total - a.total;
-        if(metric==='average') return b.average - a.average;
-        if(metric==='best') return b.best - a.best;
-        return 0;
-      });
+      const rows = computeLeaderboard();
       tbody.innerHTML = rows.map((r,i)=>{
-        const medal = i===0? '🥇' : i===1? '🥈' : i===2? '🥉' : '';
+        const medal = '🥇';
         return `<tr>
-          <td class="rank">${i+1} ${medal?`<span class="medal" title="Top ${i+1}">${medal}</span>`:''}</td>
-          <td style="font-weight:700">${r.player}</td>
+          <td class="rank">${i+1} <span class="medal" title="Top 1">${medal}</span></td>
+          <td style="font-weight:700">${r.team}</td>
           <td>${r.quizzes}</td>
           <td>${fmt(r.total)}</td>
           <td>${r.average? r.average.toFixed(2): '0.00'}</td>
@@ -306,43 +351,47 @@
       }).join('');
     }
 
+    function placeFromPoints(p){
+      if(p>=5) return '1st place';
+      if(p===4) return '2nd place';
+      if(p===3) return '3rd place';
+      return '4th place or below';
+    }
+
     function renderHistory(){
       const box = $('#quizHistory');
       const s = getSeason();
-      const quizzes = [...s.quizzes].sort((a,b)=> a.date.localeCompare(b.date)).reverse();
+      const quizzes = [...(s.quizzes||[])].sort((a,b)=> a.date.localeCompare(b.date)).reverse();
       if(!quizzes.length){ box.innerHTML = '<p class="subtitle">No quizzes yet — click “Add Quiz”.</p>'; return; }
       box.innerHTML = quizzes.map(q=>{
-        const top = Object.entries(q.scores).sort((a,b)=> b[1]-a[1])[0];
-        const topLine = top? `${top[0]} • ${top[1]} pts` : '—';
-        const scoresTable = `<table><thead><tr><th>Player</th><th>Score</th></tr></thead><tbody>`+
-          Object.entries(q.scores).sort((a,b)=> b[1]-a[1]).map(([p,sc])=>`<tr><td>${p}</td><td>${fmt(sc)}</td></tr>`).join('')+
-          `</tbody></table>`;
+        const meta = `${placeFromPoints(Number(q.points)||0)} • ${fmt(q.points)} pts • vs ${fmt(q.teams||0)} team${(q.teams||0)===1?'':'s'}`;
+        const details = `<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+          <tr><td>Points</td><td>${fmt(q.points)}</td></tr>
+          <tr><td>Teams</td><td>${fmt(q.teams||0)}</td></tr>
+          ${q.notes? `<tr><td>Notes</td><td>${q.notes}</td></tr>`:''}
+        </tbody></table>`;
         return `<details class="quiz-card">
           <summary>
             <div>
               <div class="quiz-title">${new Date(q.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'short', day:'numeric'})}</div>
-              <div class="quiz-meta">${q.notes ? q.notes+' · ' : ''}Top: <strong>${topLine}</strong></div>
+              <div class="quiz-meta">${meta}</div>
             </div>
             <div><span class="btn ghost" data-edit="${q.date}">Edit</span></div>
           </summary>
-          <div style="grid-column:1/-1; margin-top:10px">${scoresTable}</div>
+          <div style="grid-column:1/-1; margin-top:10px">${details}</div>
         </details>`
       }).join('');
 
-      // Wire up inline edit buttons
       $$('span[data-edit]').forEach(el=> el.addEventListener('click', () => openEdit(el.dataset.edit)));
     }
 
     function renderSeasonStats(){
       const s = getSeason();
-      const totalQuizzes = s.quizzes.length;
-      const latest = s.quizzes.map(q=>q.date).sort().pop();
+      const totalQuizzes = (s.quizzes||[]).length;
+      const latest = (s.quizzes||[]).map(q=>q.date).sort().pop();
       const nextMonday = computeNextMonday();
-      const bestQuiz = (()=>{
-        const flat = [];
-        s.quizzes.forEach(q=>Object.entries(q.scores).forEach(([p,sc])=> flat.push({p,sc, date:q.date })));
-        return flat.sort((a,b)=> b.sc - a.sc)[0];
-      })();
+      const bestQuiz = (s.quizzes||[]).slice().sort((a,b)=> (b.points||0)-(a.points||0))[0];
+      const avgTeams = (s.quizzes||[]).length ? (s.quizzes.reduce((a,q)=> a + (Number(q.teams)||0),0) / s.quizzes.length) : 0;
 
       $('#seasonStats').innerHTML = `
         <div class="two-col">
@@ -363,24 +412,22 @@
           </div>
         </div>
         <div class="panel" style="margin-top:16px">
-          <div class="head"><h3 style="margin:0">Best Single Quiz</h3></div>
+          <div class="head"><h3 style="margin:0">Highlights</h3></div>
           <div class="body">
-            ${bestQuiz ? `<div style="font-size:18px"><strong>${bestQuiz.p}</strong> scored <strong>${fmt(bestQuiz.sc)}</strong> on ${new Date(bestQuiz.date+'T00:00:00').toLocaleDateString()}</div>` : '<div class="subtitle">—</div>'}
+            <div>Average teams per quiz: <strong>${avgTeams? avgTeams.toFixed(1):'—'}</strong></div>
+            ${bestQuiz ? `<div>Best points: <strong>${fmt(bestQuiz.points)}</strong> on ${new Date(bestQuiz.date+'T00:00:00').toLocaleDateString()}</div>` : '<div class="subtitle">No data yet</div>'}
           </div>
         </div>`;
     }
 
-    // ---------- Modals & Forms ----------
+    // ---------- Modal & Form ----------
     const modal = $('#modal');
-    const playersList = $('#playersList');
-
-    function openModal(){ modal.classList.add('open'); buildPlayersInputs(); prefillDate(); }
+    function openModal(){ modal.classList.add('open'); prefillDate(); updatePlacePreview(); }
     function closeModal(){ modal.classList.remove('open'); }
 
     function prefillDate(){
-      // Default to last Monday or today if Monday
       const d = new Date();
-      const day = d.getDay(); // 1 = Mon (in JS 1=Mon if we map, but actually 1=Mon? No: JS 1=Mon? JS: 0=Sun, 1=Mon)
+      const day = d.getDay(); // 0=Sun .. 6=Sat
       const monday = new Date(d);
       const diff = (day===1)?0: ((day+6)%7); // days since Monday
       monday.setDate(d.getDate()-diff);
@@ -389,77 +436,51 @@
 
     function computeNextMonday(){
       const d = new Date();
-      const day = d.getDay(); // 0=Sun .. 6=Sat
-      const add = (8 - day) % 7; // days to next Monday
+      const day = d.getDay();
+      const add = (8 - day) % 7;
       const next = new Date(d); next.setDate(d.getDate() + (add||7));
       next.setHours(12,0,0,0);
       return next;
     }
 
-    function buildPlayersInputs(existingScores){
-      const s = getSeason();
-      const players = [...new Set([...(s.players||[]), ...(existingScores? Object.keys(existingScores): [])])];
-      playersList.innerHTML = '';
-      players.forEach(p=> addPlayerRow(p, existingScores? existingScores[p] : ''));
-    }
-
-    function addPlayerRow(name='', score=''){
-      const row = document.createElement('div');
-      row.className = 'player-row';
-      row.innerHTML = `
-        <input type="text" class="pname" placeholder="Player name" value="${name}">
-        <input type="number" class="pscore" placeholder="Score" inputmode="numeric" value="${score}" min="0" step="1">
-        <button class="btn ghost">Remove</button>`;
-      row.querySelector('button').addEventListener('click', ()=> row.remove());
-      playersList.appendChild(row);
-    }
-
-    function collectScores(){
-      const names = $$('.pname').map(i=>i.value.trim()).filter(Boolean);
-      const dup = names.find((n,idx)=> names.indexOf(n) !== idx);
-      if(dup){ toast(`Duplicate player: ${dup}`); return null }
-      const scores = {};
-      $$('.player-row').forEach(row=>{
-        const n = row.querySelector('.pname').value.trim();
-        const v = Number(row.querySelector('.pscore').value || 0);
-        if(n) scores[n] = v;
-      })
-      return scores;
-    }
-
     function openEdit(date){
       const s = getSeason();
-      const q = s.quizzes.find(x=>x.date===date);
+      const q = (s.quizzes||[]).find(x=>x.date===date);
       if(!q){ toast('Quiz not found'); return; }
       openModal();
       $('#quizDate').value = q.date;
       $('#quizNotes').value = q.notes||'';
-      buildPlayersInputs(q.scores);
+      $('#quizPoints').value = q.points||'';
+      $('#quizTeams').value = q.teams||'';
+      updatePlacePreview();
     }
+
+    function updatePlacePreview(){
+      const p = Number($('#quizPoints').value||0);
+      $('#placePreview').textContent = p? `This equals: ${placeFromPoints(p)}` : '';
+    }
+    $('#quizPoints').addEventListener?.('input', updatePlacePreview);
 
     // ---------- Events ----------
     $('#btnAddQuiz').addEventListener('click', openModal);
     $('#btnCloseModal').addEventListener('click', closeModal);
-    $('#btnAddPlayer').addEventListener('click', ()=> addPlayerRow());
-    $('#btnClearForm').addEventListener('click', ()=>{ $('#quizDate').value=''; $('#quizNotes').value=''; playersList.innerHTML=''; });
+    $('#btnClearForm').addEventListener('click', ()=>{ $('#quizDate').value=''; $('#quizNotes').value=''; $('#quizPoints').value=''; $('#quizTeams').value=''; updatePlacePreview(); });
 
     $('#btnSaveQuiz').addEventListener('click', ()=>{
       const date = $('#quizDate').value;
       if(!date){ toast('Pick a date'); return }
-      const scores = collectScores(); if(!scores) return;
       const notes = $('#quizNotes').value.trim();
+      const points = Math.max(2, Math.min(5, Number($('#quizPoints').value||0)));
+      const teams = Math.max(0, Number($('#quizTeams').value||0));
+      if(!points){ toast('Enter points (2–5)'); return }
       const s = getSeason();
-      // Upsert players list
-      const newPlayers = Array.from(new Set([...(s.players||[]), ...Object.keys(scores)])).sort();
-      s.players = newPlayers;
-      // Upsert quiz by date
-      const existing = s.quizzes.find(q=>q.date===date);
-      if(existing){ existing.scores = scores; existing.notes = notes; }
-      else { s.quizzes.push({ date, notes, scores }); }
+      const existing = (s.quizzes||[]).find(q=>q.date===date);
+      if(existing){ existing.notes = notes; existing.points = points; existing.teams = teams; }
+      else { (s.quizzes|| (s.quizzes=[])).push({ date, notes, points, teams }); }
       save(state); renderAll(); closeModal(); confetti(); toast('Quiz saved');
     });
 
-    seasonSelect.addEventListener('change', ()=>{ state.currentSeason = seasonSelect.value; save(state); renderAll(); });
+    seasonSelect.addEventListener('change', async ()=>{ state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
     metricSelect.addEventListener('change', renderLeaderboard);
 
     $('#btnNewSeason').addEventListener('click', ()=>{
@@ -467,7 +488,7 @@
       const year = prompt('Create season (year):', nextYear);
       if(!year) return;
       if(state.seasons[year]){ toast('Season already exists'); return; }
-      state.seasons[year] = { players: [], quizzes: [] };
+      state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
       state.currentSeason = year;
       save(state); renderAll(); confetti(); toast(`Season ${year} created`);
     });
@@ -475,7 +496,7 @@
     $('#btnExport').addEventListener('click', ()=>{
       const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'quiz-league.json'; a.click(); URL.revokeObjectURL(url);
+      const a = document.createElement('a'); a.href = url; a.download = 'gorsko-slivovo-quiz.json'; a.click(); URL.revokeObjectURL(url);
     });
 
     $('#fileImport').addEventListener('change', (e)=>{
@@ -502,14 +523,7 @@
     addEventListener('resize', resize); resize();
     function confetti(){
       for(let i=0;i<80;i++){
-        particles.push({
-          x: Math.random()*fx.width,
-          y: -20,
-          vx: (Math.random()-0.5)*2,
-          vy: 2 + Math.random()*2.5,
-          r: 2 + Math.random()*4,
-          a: 1,
-        })
+        particles.push({ x: Math.random()*fx.width, y: -20, vx: (Math.random()-0.5)*2, vy: 2 + Math.random()*2.5, r: 2 + Math.random()*4, a: 1 })
       }
     }
     function tick(){
@@ -529,8 +543,8 @@
     tick();
 
     // ---------- Boot ----------
-    function renderAll(){ renderSeasons(); renderLeaderboard(); renderHistory(); renderSeasonStats(); }
-    renderAll();
+    async function renderAll(){ renderSeasons(); renderLeaderboard(); renderHistory(); renderSeasonStats(); }
+    (async ()=>{ await tryLoadCSVForSeason(state.currentSeason); renderAll(); })();
   </script>
 </body>
 </html>
