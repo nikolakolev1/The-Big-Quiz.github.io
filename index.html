@@ -117,7 +117,7 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1 class="title glow">Gorsko Slivovo — Monday Quiz League</h1>
-          <div class="subtitle">Public scoreboard for The Big Quiz @ The Academy — one team, seasons by year</div>
+          <div class="subtitle">Public scoreboard for The Big Quiz @ The Academy</div>
         </div>
       </div>
       <div class="controls">
@@ -326,19 +326,17 @@
           <tr><td>Teams</td><td>${fmt(q.teams||0)}</td></tr>
           ${q.notes? `<tr><td>Notes</td><td>${q.notes}</td></tr>`:''}
         </tbody></table>`;
-        return `<details class="quiz-card">
-          <summary>
-            <div>
-              <div class="quiz-title">${new Date(q.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'short', day:'numeric'})}</div>
-              <div class="quiz-meta">${meta}</div>
-            </div>
-            <div><span class="btn ghost" data-edit="${q.date}">Edit</span></div>
-          </summary>
-          <div style="grid-column:1/-1; margin-top:10px">${details}</div>
-        </details>`
+          return `<details class="quiz-card">
+            <summary>
+              <div>
+                <div class="quiz-title">${new Date(q.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'short', day:'numeric'})}</div>
+                <div class="quiz-meta">${meta}</div>
+              </div>
+            </summary>
+            <div style="grid-column:1/-1; margin-top:10px">${details}</div>
+          </details>`
       }).join('');
 
-      $$('span[data-edit]').forEach(el=> el.addEventListener('click', () => openEdit(el.dataset.edit)));
     }
 
     function renderSeasonStats(){
@@ -376,67 +374,13 @@
         </div>`;
     }
 
-    // ---------- Modal & Form ----------
-    const modal = $('#modal');
-    function openModal(){ modal.classList.add('open'); prefillDate(); updatePlacePreview(); }
-    function closeModal(){ modal.classList.remove('open'); }
-
-    function prefillDate(){
-      const d = new Date();
-      const day = d.getDay(); // 0=Sun .. 6=Sat
-      const monday = new Date(d);
-      const diff = (day===1)?0: ((day+6)%7); // days since Monday
-      monday.setDate(d.getDate()-diff);
-      $('#quizDate').value = monday.toISOString().slice(0,10);
-    }
-
-    function computeNextMonday(){
-      const d = new Date();
-      const day = d.getDay();
-      const add = (8 - day) % 7;
-      const next = new Date(d); next.setDate(d.getDate() + (add||7));
-      next.setHours(12,0,0,0);
-      return next;
-    }
-
-    function openEdit(date){
-      const s = getSeason();
-      const q = (s.quizzes||[]).find(x=>x.date===date);
-      if(!q){ toast('Quiz not found'); return; }
-      openModal();
-      $('#quizDate').value = q.date;
-      $('#quizNotes').value = q.notes||'';
-      $('#quizPoints').value = q.points||'';
-      $('#quizTeams').value = q.teams||'';
-      updatePlacePreview();
-    }
-
-    function updatePlacePreview(){
-      const p = Number($('#quizPoints').value||0);
-      $('#placePreview').textContent = p? `This equals: ${placeFromPoints(p)}` : '';
-    }
-    $('#quizPoints').addEventListener?.('input', updatePlacePreview);
-
     // ---------- Events ----------
-    $('#btnSaveQuiz').addEventListener('click', ()=>{
-      const date = $('#quizDate').value;
-      if(!date){ toast('Pick a date'); return }
-      const notes = $('#quizNotes').value.trim();
-      const points = Math.max(2, Math.min(5, Number($('#quizPoints').value||0)));
-      const teams = Math.max(0, Number($('#quizTeams').value||0));
-      if(!points){ toast('Enter points (2–5)'); return }
-      const s = getSeason();
-      const existing = (s.quizzes||[]).find(q=>q.date===date);
-      if(existing){ existing.notes = notes; existing.points = points; existing.teams = teams; }
-      else { (s.quizzes|| (s.quizzes=[])).push({ date, notes, points, teams }); }
-      save(state); renderAll(); closeModal(); confetti(); toast('Quiz saved');
-    });
-
+    // Note: the interactive add/edit form was removed to simplify this build.
     seasonSelect.addEventListener('change', async ()=>{ state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
     metricSelect.addEventListener('change', renderLeaderboard);
 
     // ---------- Toast & Confetti ----------
-    function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=> t.classList.remove('show'), 2200) }
+  function toast(msg){ const t = $('#toast'); if(t){ t.textContent = msg; t.classList.add('show'); setTimeout(()=> t.classList.remove('show'), 2200); } else { console.log('Toast:', msg); } }
 
     // Minimal confetti effect
     const fx = document.getElementById('fx');
