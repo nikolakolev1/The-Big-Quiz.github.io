@@ -125,12 +125,6 @@
           <span class="subtitle" style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em">Season</span>
           <select id="seasonSelect"></select>
         </label>
-        <button class="btn secondary" id="btnNewSeason" title="Start next season (new year)">New Season</button>
-        <button class="btn" id="btnAddQuiz" title="Add a new Monday quiz result">+ Add Quiz</button>
-        <button class="btn ghost" id="btnExport" title="Export JSON backup">Export</button>
-        <label class="btn ghost" style="cursor:pointer" title="Import JSON backup">
-          Import <input type="file" id="fileImport" accept="application/json" hidden>
-        </label>
       </div>
     </div>
   </header>
@@ -180,51 +174,8 @@
   </main>
 
   <footer>
-    Made with 💜 on GitHub Pages. Data can load from <code>data/season-YYYY.csv</code> if present in the repo, else from your browser (localStorage). Use Export/Import for backups.
+    Made with 💜 on GitHub Pages. Data can load from <code>data/season-YYYY.csv</code> if present in the repo, else from your browser (localStorage).
   </footer>
-
-  <!-- Add Quiz Modal -->
-  <div class="modal" id="modal">
-    <div class="modal-card">
-      <div class="head">
-        <h3 style="margin:0">Add Monday Quiz</h3>
-        <button class="btn secondary" id="btnCloseModal">Close</button>
-      </div>
-      <div class="body">
-        <div class="two-col">
-          <div>
-            <label>Date (Monday)
-              <input type="date" id="quizDate" required style="width:100%; margin-top:6px">
-            </label>
-          </div>
-          <div>
-            <label>Location / Notes
-              <input type="text" id="quizNotes" placeholder="The Academy, theme, etc." style="width:100%; margin-top:6px">
-            </label>
-          </div>
-        </div>
-        <div class="two-col" style="margin-top:12px">
-          <div>
-            <label>Our points (2–5)
-              <input type="number" id="quizPoints" min="2" max="5" step="1" placeholder="e.g. 4" style="width:100%; margin-top:6px">
-            </label>
-          </div>
-          <div>
-            <label>Teams competing (incl. us)
-              <input type="number" id="quizTeams" min="1" step="1" placeholder="e.g. 12" style="width:100%; margin-top:6px">
-            </label>
-          </div>
-        </div>
-        <div class="subtitle" id="placePreview" style="margin-top:8px"></div>
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px">
-          <button class="btn danger" id="btnClearForm" title="Clear the form">Clear</button>
-          <button class="btn" id="btnSaveQuiz">Save Quiz</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast">Saved!</div>
 
   <script>
     // ---------- Utilities ----------
@@ -467,10 +418,6 @@
     $('#quizPoints').addEventListener?.('input', updatePlacePreview);
 
     // ---------- Events ----------
-    $('#btnAddQuiz').addEventListener('click', openModal);
-    $('#btnCloseModal').addEventListener('click', closeModal);
-    $('#btnClearForm').addEventListener('click', ()=>{ $('#quizDate').value=''; $('#quizNotes').value=''; $('#quizPoints').value=''; $('#quizTeams').value=''; updatePlacePreview(); });
-
     $('#btnSaveQuiz').addEventListener('click', ()=>{
       const date = $('#quizDate').value;
       if(!date){ toast('Pick a date'); return }
@@ -487,35 +434,6 @@
 
     seasonSelect.addEventListener('change', async ()=>{ state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
     metricSelect.addEventListener('change', renderLeaderboard);
-
-    $('#btnNewSeason').addEventListener('click', ()=>{
-      const nextYear = String((Number(Object.keys(state.seasons).sort().pop())||new Date().getFullYear()) + 1);
-      const year = prompt('Create season (year):', nextYear);
-      if(!year) return;
-      if(state.seasons[year]){ toast('Season already exists'); return; }
-      state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
-      state.currentSeason = year;
-      save(state); renderAll(); confetti(); toast(`Season ${year} created`);
-    });
-
-    $('#btnExport').addEventListener('click', ()=>{
-      const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'gorsko-slivovo-quiz.json'; a.click(); URL.revokeObjectURL(url);
-    });
-
-    $('#fileImport').addEventListener('change', (e)=>{
-      const file = e.target.files[0]; if(!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try{
-          const data = JSON.parse(reader.result);
-          if(!data.seasons || !data.currentSeason) throw new Error('Invalid file');
-          state = data; save(state); renderAll(); confetti(); toast('Import successful');
-        }catch(err){ toast('Import failed: '+err.message) }
-      };
-      reader.readAsText(file);
-    });
 
     // ---------- Toast & Confetti ----------
     function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=> t.classList.remove('show'), 2200) }
