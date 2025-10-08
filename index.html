@@ -238,7 +238,7 @@
         if(!line || !line.trim()) continue;
         const cols = splitCSVLine(line);
         const q = {
-          date: (cols[idx.date]||'').trim(),
+          date: normalizeDate((cols[idx.date]||'').trim()),
           notes: (cols[idx.notes]||'').trim(),
           points: Number((cols[idx.points]||'').trim()||0),
           teams: Number((cols[idx.teams]||'').trim()||0)
@@ -263,6 +263,39 @@
       }
       out.push(cur);
       return out;
+    }
+
+    // Normalize date inputs to YYYY-MM-DD. Accepts:
+    // - already YYYY-MM-DD
+    // - YYYY/MM/DD
+    // - DD.MM.YYYY or D.M.YYYY (user requested)
+    // - fallback: Date parseable strings
+    function normalizeDate(raw){
+      if(!raw) return '';
+      raw = raw.trim();
+      // ISO YYYY-MM-DD
+      let m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+      // ISO alternative YYYY/MM/DD
+      m = raw.match(/^(\d{4})\/(\d{2})\/(\d{2})/);
+      if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+      // DD.MM.YYYY or D.M.YYYY, also accept '-' or '/'
+      m = raw.match(/^(\d{1,2})[\.\-\/](\d{1,2})[\.\-\/](\d{4})$/);
+      if(m){
+        const dd = String(m[1]).padStart(2,'0');
+        const mm = String(m[2]).padStart(2,'0');
+        const yyyy = m[3];
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      // Fallback: try Date parsing and format
+      const dt = new Date(raw);
+      if(!isNaN(dt.getTime())){
+        const y = dt.getFullYear();
+        const mo = String(dt.getMonth()+1).padStart(2,'0');
+        const da = String(dt.getDate()).padStart(2,'0');
+        return `${y}-${mo}-${da}`;
+      }
+      return '';
     }
 
     // ---------- Rendering ----------
