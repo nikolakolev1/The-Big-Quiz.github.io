@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Hint to browsers and proxies: try to avoid serving stale pages (best-effort only on static hosts) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Gorsko Slivovo — Monday Quiz League</title>
   <meta name="description" content="Public record of Gorsko Slivovo's Monday quiz results at The Big Quiz @ The Academy. Seasons by year, quiz history, and leaderboards." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -125,6 +129,7 @@
           <span class="subtitle" style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em">Season</span>
           <select id="seasonSelect"></select>
         </label>
+        <button id="refreshBtn" class="btn secondary" title="Clear cached data and reload from repo">Refresh data</button>
       </div>
     </div>
   </header>
@@ -169,6 +174,7 @@
   <footer>
     Made with 💜 on GitHub Pages. Data can load from <code>data/season-YYYY.csv</code> if present in the repo, else from your browser (localStorage).
   </footer>
+  <div id="toast" class="toast" aria-live="polite"></div>
 
   <script>
     // ---------- Utilities ----------
@@ -193,8 +199,18 @@
       currentSeason: '2025'
     };
 
+    // Load initial in-memory state. We intentionally do NOT trust localStorage as the
+    // authoritative source on boot because stale saved data is the main cause of "broken"
+    // pages for users who keep old data in their browser. Instead we start from demoData
+    // and prefer fetching a fresh CSV from the repo. localStorage is kept only as a
+    // fallback when remote data is unavailable (offline or CSV missing).
     function load(){
-      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || demoData }catch(e){ return demoData }
+      try{
+        // Return a safe initial state (demo) — we'll replace it with fresh CSV data soon.
+        return demoData;
+      }catch(e){
+        return demoData;
+      }
     }
     function save(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
@@ -210,13 +226,31 @@
         if(!res.ok) throw new Error(`CSV not found (${res.status})`);
         const text = await res.text();
         const quizzes = parseCSV(text);
+        if(!state.seasons) state.seasons = {};
         if(!state.seasons[year]) state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
         state.seasons[year].quizzes = quizzes;
+        state.currentSeason = year;
         save(state);
         toast(`Loaded CSV for ${year}`);
       }catch(e){
-        // If missing, keep whatever we already had (demo/local)
-        toast('CSV not found for ' + year)
+        // Remote CSV failed. Try to fall back to any saved data in localStorage for this year.
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if(raw){
+            const saved = JSON.parse(raw);
+            if(saved && saved.seasons && saved.seasons[year]){
+              // Use the locally-saved CSV as a fallback (offline / missing file)
+              if(!state.seasons) state.seasons = {};
+              state.seasons[year] = saved.seasons[year];
+              state.currentSeason = saved.currentSeason || year;
+              toast(`Using cached data for ${year}`);
+              return;
+            }
+          }
+        }catch(_){ /* ignore parse errors */ }
+
+        // If we reach here, there was no usable local fallback — stay with demo data.
+        toast('CSV not found for ' + year);
         console.warn('CSV load skipped:', e.message);
       }
     }
@@ -401,7 +435,16 @@
 
     // ---------- Events ----------
     // Note: the interactive add/edit form was removed to simplify this build.
-  seasonSelect.addEventListener('change', async ()=>{ state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
+    seasonSelect.addEventListener('change', async ()=>{ state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
+
+    // Allow the user to clear the local cached copy and fetch fresh data from the repo.
+    $('#refreshBtn').addEventListener('click', async ()=>{
+      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+      toast('Cleared cached data — loading fresh');
+      const year = state.currentSeason || String(new Date().getFullYear());
+      await tryLoadCSVForSeason(year);
+      renderAll();
+    });
 
     // ---------- Toast & Confetti ----------
   function toast(msg){ const t = $('#toast'); if(t){ t.textContent = msg; t.classList.add('show'); setTimeout(()=> t.classList.remove('show'), 2200); } else { console.log('Toast:', msg); } }
