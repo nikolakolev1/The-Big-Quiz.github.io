@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,110 +9,421 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Gorsko Slivovo — Monday Quiz League</title>
-  <meta name="description" content="Public record of Gorsko Slivovo's Monday quiz results at The Big Quiz @ The Academy. Seasons by year, quiz history, and leaderboards." />
+  <meta name="description"
+    content="Public record of Gorsko Slivovo's Monday quiz results at The Big Quiz @ The Academy. Seasons by year, quiz history, and leaderboards." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@600;800&display=swap"
+    rel="stylesheet">
   <style>
-    :root{
-      --bg:#0b1020; /* deep space */
-      --panel:#0f1530ee; /* glass */
-      --text:#ebefff;
-      --muted:#9bb0ffcc;
-      --accent:#8b5cf6; /* violet */
-      --accent-2:#22d3ee; /* cyan */
-      --accent-3:#f43f5e; /* rose */
-      --gold:#f5c542;
-      --ok:#10b981;
-      --bad:#ef4444;
-      --shadow:0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
-      --glass:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-      --neon:0 0 12px rgba(139,92,246,.65), 0 0 32px rgba(34,211,238,.35);
+    :root {
+      --bg: #0b1020;
+      /* deep space */
+      --panel: #0f1530ee;
+      /* glass */
+      --text: #ebefff;
+      --muted: #9bb0ffcc;
+      --accent: #8b5cf6;
+      /* violet */
+      --accent-2: #22d3ee;
+      /* cyan */
+      --accent-3: #f43f5e;
+      /* rose */
+      --gold: #f5c542;
+      --ok: #10b981;
+      --bad: #ef4444;
+      --shadow: 0 20px 60px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .05);
+      --glass: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .02));
+      --neon: 0 0 12px rgba(139, 92, 246, .65), 0 0 32px rgba(34, 211, 238, .35);
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--text); background: radial-gradient(1200px 600px at 10% 10%, #111a3a, transparent), radial-gradient(900px 600px at 90% 10%, #221144, transparent), radial-gradient(1000px 800px at 50% 100%, #0a1a2a, transparent), var(--bg);
-      overflow-x:hidden;
-    }
-    /* Animated gradient veil */
-    .veil{position:fixed; inset:-40vmax; background: conic-gradient(from 90deg at 50% 50%, rgba(34,211,238,.08), rgba(139,92,246,.12), rgba(244,63,94,.08), rgba(34,211,238,.12)); filter: blur(80px); animation: spin 60s linear infinite; opacity:.6; pointer-events:none;}
-    @keyframes spin{to{transform: rotate(360deg)}}
 
-    header{
-      position:sticky; top:0; z-index:20;
-      backdrop-filter: blur(10px); background: linear-gradient(180deg, rgba(15,21,48,.9), rgba(15,21,48,.6));
-      border-bottom: 1px solid rgba(255,255,255,.07);
+    * {
+      box-sizing: border-box
     }
-    .wrap{max-width:1100px; margin:0 auto; padding:18px 20px;}
-    .brand{display:flex; align-items:center; gap:14px}
-    .logo{width:42px; height:42px; border-radius:12px; background: radial-gradient(circle at 30% 30%, var(--accent-2), transparent 60%), radial-gradient(circle at 70% 70%, var(--accent), transparent 60%), linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,0)); box-shadow: var(--neon); position:relative}
-    .logo:after{content:''; position:absolute; inset:3px; border-radius:9px; border:1px solid rgba(255,255,255,.25)}
-    h1.title{font-family:Orbitron, Inter, sans-serif; letter-spacing:.6px; font-size: clamp(20px, 2.7vw, 34px); margin:0}
-    .subtitle{color:var(--muted); font-size:14px}
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 10% 10%, #111a3a, transparent), radial-gradient(900px 600px at 90% 10%, #221144, transparent), radial-gradient(1000px 800px at 50% 100%, #0a1a2a, transparent), var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* Animated gradient veil */
+    .veil {
+      position: fixed;
+      inset: -40vmax;
+      background: conic-gradient(from 90deg at 50% 50%, rgba(34, 211, 238, .08), rgba(139, 92, 246, .12), rgba(244, 63, 94, .08), rgba(34, 211, 238, .12));
+      filter: blur(80px);
+      animation: spin 60s linear infinite;
+      opacity: .6;
+      pointer-events: none;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(15, 21, 48, .9), rgba(15, 21, 48, .6));
+      border-bottom: 1px solid rgba(255, 255, 255, .07);
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 30%, var(--accent-2), transparent 60%), radial-gradient(circle at 70% 70%, var(--accent), transparent 60%), linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0));
+      box-shadow: var(--neon);
+      position: relative
+    }
+
+    .logo:after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 9px;
+      border: 1px solid rgba(255, 255, 255, .25)
+    }
+
+    h1.title {
+      font-family: Orbitron, Inter, sans-serif;
+      letter-spacing: .6px;
+      font-size: clamp(20px, 2.7vw, 34px);
+      margin: 0
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px
+    }
 
     /* Panels */
-    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:22px; margin:20px auto;}
-    @media (max-width: 900px){.grid{grid-template-columns: 1fr;}}
-    .panel{background: var(--panel); background-image: var(--glass); border:1px solid rgba(255,255,255,.06); border-radius:18px; box-shadow: var(--shadow); overflow:hidden}
-    .panel .head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.06)}
-    .panel .head h2{margin:0; font-size:18px}
-    .panel .body{padding:18px}
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 22px;
+      margin: 20px auto;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      background-image: var(--glass);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden
+    }
+
+    .panel .head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, .06)
+    }
+
+    .panel .head h2 {
+      margin: 0;
+      font-size: 18px
+    }
+
+    .panel .body {
+      padding: 18px
+    }
 
     /* Buttons */
-    .btn{appearance:none; border:0; border-radius:12px; padding:10px 14px; font-weight:600; color:#07111f; background:linear-gradient(180deg, #fff, #cfe8ff); box-shadow:0 8px 24px rgba(34,211,238,.25); cursor:pointer}
-    .btn:hover{filter:brightness(1.05)}
-    .btn.secondary{color:var(--text); background: linear-gradient(180deg, #1a244a, #141a36); border:1px solid rgba(255,255,255,.1)}
-    .btn.ghost{background: transparent; color:var(--muted); border:1px dashed rgba(255,255,255,.2)}
-    .btn.danger{background: linear-gradient(180deg, #fdd, #fca5a5); color:#3b0d0d}
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 600;
+      color: #07111f;
+      background: linear-gradient(180deg, #fff, #cfe8ff);
+      box-shadow: 0 8px 24px rgba(34, 211, 238, .25);
+      cursor: pointer
+    }
+
+    .btn:hover {
+      filter: brightness(1.05)
+    }
+
+    .btn.secondary {
+      color: var(--text);
+      background: linear-gradient(180deg, #1a244a, #141a36);
+      border: 1px solid rgba(255, 255, 255, .1)
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px dashed rgba(255, 255, 255, .2)
+    }
+
+    .btn.danger {
+      background: linear-gradient(180deg, #fdd, #fca5a5);
+      color: #3b0d0d
+    }
 
     /* Controls row */
-    .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
-    select, input[type="date"], input[type="number"], input[type="text"], textarea{
-      background:#0c1330; color:var(--text); border-radius:10px; border:1px solid rgba(255,255,255,.15); padding:10px 12px; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center
     }
-    select{cursor:pointer}
+
+    select,
+    input[type="date"],
+    input[type="number"],
+    input[type="text"],
+    textarea {
+      background: #0c1330;
+      color: var(--text);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .15);
+      padding: 10px 12px;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+    }
+
+    select {
+      cursor: pointer
+    }
 
     /* Leaderboard */
-    table{width:100%; border-collapse:collapse;}
-    thead th{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); text-align:left; border-bottom:1px solid rgba(255,255,255,.1); padding:8px 8px}
-    tbody td{padding:10px 8px; border-bottom:1px dashed rgba(255,255,255,.07)}
-    tbody tr:hover{background: rgba(255,255,255,.03)}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-    .rank{width:42px; text-align:center; font-weight:800}
-    .medal{filter: drop-shadow(0 0 10px rgba(245,197,66,.6))}
+    thead th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      padding: 8px 8px
+    }
+
+    tbody td {
+      padding: 10px 8px;
+      border-bottom: 1px dashed rgba(255, 255, 255, .07)
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, .03)
+    }
+
+    .rank {
+      width: 42px;
+      text-align: center;
+      font-weight: 800
+    }
+
+    .medal {
+      filter: drop-shadow(0 0 10px rgba(245, 197, 66, .6))
+    }
 
     /* Quiz history */
-    .quiz-card{display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; padding:14px; margin:12px 0; border:1px solid rgba(255,255,255,.07); border-radius:14px; background: rgba(10,20,40,.6)}
-    .quiz-title{font-weight:700}
-    .quiz-meta{color:var(--muted)}
-    details summary{cursor:pointer; list-style:none}
-    details summary::-webkit-details-marker{display:none}
+    .quiz-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 14px;
+      margin: 12px 0;
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 14px;
+      background: rgba(10, 20, 40, .6)
+    }
+
+    .quiz-title {
+      font-weight: 700
+    }
+
+    .quiz-meta {
+      color: var(--muted)
+    }
+
+    details summary {
+      cursor: pointer;
+      list-style: none
+    }
+
+    details summary::-webkit-details-marker {
+      display: none
+    }
 
     /* Footer */
-    footer{opacity:.8; color:var(--muted); font-size:13px; text-align:center; padding:20px 10px}
+    footer {
+      opacity: .8;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 20px 10px
+    }
 
     /* Toast */
-    .toast{position:fixed; right:16px; bottom:16px; padding:12px 14px; border-radius:12px; background:#07111f; color:var(--text); border:1px solid rgba(255,255,255,.1); box-shadow: var(--shadow); opacity:0; transform: translateY(12px); transition: all .25s ease; z-index:50}
-    .toast.show{opacity:1; transform:translateY(0)}
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #07111f;
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, .1);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all .25s ease;
+      z-index: 50
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0)
+    }
 
     /* Modal */
-    .modal{position:fixed; inset:0; background:rgba(5,8,16,.65); backdrop-filter: blur(8px); display:none; align-items:center; justify-content:center; padding:20px; z-index:40}
-    .modal.open{display:flex}
-    .modal-card{width:min(860px, 96vw); background:var(--panel); background-image: var(--glass); border:1px solid rgba(255,255,255,.07); border-radius:18px; box-shadow: var(--shadow)}
-    .modal-card .head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.06)}
-    .modal-card .body{padding:18px}
-    .two-col{display:grid; grid-template-columns: 1fr 1fr; gap:16px}
-    @media (max-width: 800px){.two-col{grid-template-columns: 1fr}}
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 16, .65);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 40
+    }
+
+    .modal.open {
+      display: flex
+    }
+
+    .modal-card {
+      width: min(860px, 96vw);
+      background: var(--panel);
+      background-image: var(--glass);
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 18px;
+      box-shadow: var(--shadow)
+    }
+
+    .modal-card .head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, .06)
+    }
+
+    .modal-card .body {
+      padding: 18px
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px
+    }
+
+    @media (max-width: 800px) {
+      .two-col {
+        grid-template-columns: 1fr
+      }
+    }
 
     /* Neon glow headline */
-    .glow{color:#fff; text-shadow:0 0 8px rgba(139,92,246,.8), 0 0 22px rgba(34,211,238,.6)}
+    .glow {
+      color: #fff;
+      text-shadow: 0 0 8px rgba(139, 92, 246, .8), 0 0 22px rgba(34, 211, 238, .6)
+    }
 
     /* Confetti canvas */
-    #fx{position:fixed; inset:0; pointer-events:none; z-index:60}
+    #fx {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 60
+    }
+
+    /* Photos gallery */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .photo-thumb {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .1);
+      cursor: pointer;
+      transition: transform .15s ease, filter .15s ease;
+      background: #0c1330;
+    }
+    .photo-thumb:hover { transform: translateY(-2px); filter: brightness(1.05); }
+    .photo-empty { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+    .photo-viewer { position: relative; display: grid; place-items: center; }
+    .photo-viewer img { width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; background: #050814; }
+    .photo-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(7, 17, 31, .7);
+      border: 1px solid rgba(255,255,255,.1);
+      color: var(--text);
+      width: 42px; height: 42px;
+      display: grid; place-items: center;
+      border-radius: 50%; cursor: pointer;
+      box-shadow: var(--shadow);
+      user-select: none;
+    }
+    .photo-nav:hover { filter: brightness(1.07); }
+    .photo-nav.prev { left: 10px; }
+    .photo-nav.next { right: 10px; }
+    .photo-caption { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   </style>
 </head>
+
 <body>
   <canvas id="fx"></canvas>
   <div class="veil" aria-hidden="true"></div>
@@ -126,10 +438,12 @@
       </div>
       <div class="controls">
         <label>
-          <span class="subtitle" style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em">Season</span>
+          <span class="subtitle"
+            style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em">Season</span>
           <select id="seasonSelect"></select>
         </label>
-        <button id="refreshBtn" class="btn secondary" title="Clear cached data and reload from repo">Refresh data</button>
+        <button id="refreshBtn" class="btn secondary" title="Clear cached data and reload from repo">Refresh
+          data</button>
       </div>
     </div>
   </header>
@@ -144,7 +458,14 @@
         <div class="body">
           <table id="leaderboard">
             <thead>
-              <tr><th class="rank">#</th><th>Team</th><th>Quizzes</th><th>Total</th><th>Average</th><th>Best</th></tr>
+              <tr>
+                <th class="rank">#</th>
+                <th>Team</th>
+                <th>Quizzes</th>
+                <th>Total</th>
+                <th>Average</th>
+                <th>Best</th>
+              </tr>
             </thead>
             <tbody></tbody>
           </table>
@@ -172,9 +493,32 @@
   </main>
 
   <footer>
-    Made with 💜 on GitHub Pages. Data can load from <code>data/season-YYYY.csv</code> if present in the repo, else from your browser (localStorage).
+    Made with 💜 on GitHub Pages. Data can load from <code>data/season-YYYY.csv</code> if present in the repo, else from
+    your browser (localStorage).
   </footer>
   <div id="toast" class="toast" aria-live="polite"></div>
+  <!-- Photo lightbox modal -->
+  <div id="photoModal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
+      <div class="head">
+        <h3 id="photoModalTitle" style="margin:0">Photos</h3>
+        <div style="display:flex; gap:8px">
+          <button id="photoModalClose" class="btn secondary">Close</button>
+        </div>
+      </div>
+      <div class="body">
+        <div class="photo-viewer">
+          <button class="photo-nav prev" id="photoPrev" title="Previous" aria-label="Previous">&#8249;</button>
+          <img id="photoImage" alt="Quiz photo" loading="lazy" />
+          <button class="photo-nav next" id="photoNext" title="Next" aria-label="Next">&#8250;</button>
+        </div>
+        <div class="photo-caption">
+          <div id="photoCaption" class="subtitle"></div>
+          <div id="photoPager" class="subtitle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ---------- Utilities ----------
@@ -191,8 +535,8 @@
         '2025': {
           team: TEAM_NAME,
           quizzes: [
-            { date:'2025-09-30', notes:'General Knowledge', points: 2, teams: 13 },
-            { date:'2025-10-06', notes:'General Knowledge', points: 4, teams: 18 }
+            { date: '2025-09-30', notes: 'General Knowledge', points: 2, teams: 13 },
+            { date: '2025-10-06', notes: 'General Knowledge', points: 4, teams: 18 }
           ]
         }
       },
@@ -204,92 +548,94 @@
     // pages for users who keep old data in their browser. Instead we start from demoData
     // and prefer fetching a fresh CSV from the repo. localStorage is kept only as a
     // fallback when remote data is unavailable (offline or CSV missing).
-    function load(){
-      try{
+    function load() {
+      try {
         // Return a safe initial state (demo) — we'll replace it with fresh CSV data soon.
         return demoData;
-      }catch(e){
+      } catch (e) {
         return demoData;
       }
     }
-    function save(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    function save(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
     // ---------- State ----------
     let state = load();
-  const seasonSelect = $('#seasonSelect');
+    const seasonSelect = $('#seasonSelect');
 
     // ---------- CSV LOADING ----------
-    async function tryLoadCSVForSeason(year){
+    async function tryLoadCSVForSeason(year) {
       const urlCsv = `data/season-${year}.csv?v=${Date.now()}`; // cache-bust GitHub Pages
-      try{
-        const res = await fetch(urlCsv, {cache:'no-store'});
-        if(!res.ok) throw new Error(`CSV not found (${res.status})`);
+      try {
+        const res = await fetch(urlCsv, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`CSV not found (${res.status})`);
         const text = await res.text();
         const quizzes = parseCSV(text);
-        if(!state.seasons) state.seasons = {};
-        if(!state.seasons[year]) state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
+        if (!state.seasons) state.seasons = {};
+        if (!state.seasons[year]) state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
         state.seasons[year].quizzes = quizzes;
         state.currentSeason = year;
         save(state);
         toast(`Loaded CSV for ${year}`);
-      }catch(e){
+      } catch (e) {
         // Remote CSV failed. Try to fall back to any saved data in localStorage for this year.
-        try{
+        try {
           const raw = localStorage.getItem(STORAGE_KEY);
-          if(raw){
+          if (raw) {
             const saved = JSON.parse(raw);
-            if(saved && saved.seasons && saved.seasons[year]){
+            if (saved && saved.seasons && saved.seasons[year]) {
               // Use the locally-saved CSV as a fallback (offline / missing file)
-              if(!state.seasons) state.seasons = {};
+              if (!state.seasons) state.seasons = {};
               state.seasons[year] = saved.seasons[year];
               state.currentSeason = saved.currentSeason || year;
               toast(`Using cached data for ${year}`);
               return;
             }
           }
-        }catch(_){ /* ignore parse errors */ }
+        } catch (_) { /* ignore parse errors */ }
 
         // If we reach here, there was no usable local fallback — stay with demo data.
         toast('CSV not found for ' + year);
         console.warn('CSV load skipped:', e.message);
       }
     }
-    
+
     // Basic CSV parser supporting quoted fields + BOM-safe + Windows/Mac/Unix newlines
-    function parseCSV(text){
-      const lines = text.replace(/^\uFEFF/,'').trim().split(/\r?\n/);
-      if(!lines.length) return [];
-      const header = splitCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
+    function parseCSV(text) {
+      const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+      if (!lines.length) return [];
+      const header = splitCSVLine(lines[0]).map(h => h.trim().toLowerCase());
       const idx = {
         date: header.indexOf('date'),
         notes: header.indexOf('notes'),
         points: header.indexOf('points'),
-        teams: header.indexOf('teams')
+        teams: header.indexOf('teams'),
+        photos: header.findIndex(h => ['photos', 'images', 'pics', 'gallery'].includes(h))
       };
       const out = [];
-      for(let i=1;i<lines.length;i++){
+      for (let i = 1; i < lines.length; i++) {
         const line = lines[i];
-        if(!line || !line.trim()) continue;
+        if (!line || !line.trim()) continue;
         const cols = splitCSVLine(line);
         const q = {
-          date: normalizeDate((cols[idx.date]||'').trim()),
-          notes: (cols[idx.notes]||'').trim(),
-          points: Number((cols[idx.points]||'').trim()||0),
-          teams: Number((cols[idx.teams]||'').trim()||0)
+          date: normalizeDate((cols[idx.date] || '').trim()),
+          notes: (cols[idx.notes] || '').trim(),
+          points: Number((cols[idx.points] || '').trim() || 0),
+          teams: Number((cols[idx.teams] || '').trim() || 0),
+          photos: idx.photos >= 0 ? parsePhotos((cols[idx.photos] || '').trim()) : []
         };
-        if(q.date) out.push(q);
+        if (q.date) out.push(q);
       }
       return out;
     }
-    
-    function splitCSVLine(line){
+
+    function splitCSVLine(line) {
       const out = []; let cur = ''; let inQ = false;
-      for(let i=0;i<line.length;i++){
+      for (let i = 0; i < line.length; i++) {
         const ch = line[i];
-        if(ch === '"'){
-          if(inQ && line[i+1] === '"'){ cur += '"'; i++; } // escaped quote
+        if (ch === '"') {
+          if (inQ && line[i + 1] === '"') { cur += '"'; i++; } // escaped quote
           else inQ = !inQ;
-        } else if(ch === ',' && !inQ){
+        } else if (ch === ',' && !inQ) {
           out.push(cur); cur = '';
         } else {
           cur += ch;
@@ -304,107 +650,134 @@
     // - YYYY/MM/DD
     // - DD.MM.YYYY or D.M.YYYY (user requested)
     // - fallback: Date parseable strings
-    function normalizeDate(raw){
-      if(!raw) return '';
+    function normalizeDate(raw) {
+      if (!raw) return '';
       raw = raw.trim();
       // ISO YYYY-MM-DD
       let m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+      if (m) return `${m[1]}-${m[2]}-${m[3]}`;
       // ISO alternative YYYY/MM/DD
       m = raw.match(/^(\d{4})\/(\d{2})\/(\d{2})/);
-      if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+      if (m) return `${m[1]}-${m[2]}-${m[3]}`;
       // DD.MM.YYYY or D.M.YYYY, also accept '-' or '/'
       m = raw.match(/^(\d{1,2})[\.\-\/](\d{1,2})[\.\-\/](\d{4})$/);
-      if(m){
-        const dd = String(m[1]).padStart(2,'0');
-        const mm = String(m[2]).padStart(2,'0');
+      if (m) {
+        const dd = String(m[1]).padStart(2, '0');
+        const mm = String(m[2]).padStart(2, '0');
         const yyyy = m[3];
         return `${yyyy}-${mm}-${dd}`;
       }
       // Fallback: try Date parsing and format
       const dt = new Date(raw);
-      if(!isNaN(dt.getTime())){
+      if (!isNaN(dt.getTime())) {
         const y = dt.getFullYear();
-        const mo = String(dt.getMonth()+1).padStart(2,'0');
-        const da = String(dt.getDate()).padStart(2,'0');
+        const mo = String(dt.getMonth() + 1).padStart(2, '0');
+        const da = String(dt.getDate()).padStart(2, '0');
         return `${y}-${mo}-${da}`;
       }
       return '';
     }
 
+    // Accept photos as one of:
+    // - Semicolon- or pipe-separated list: "img1.jpg; img2.jpg" or "img1.jpg|img2.jpg"
+    // - JSON array string: ["img1.jpg", "img2.jpg"]
+    // - Single path
+    // Paths can be relative (e.g., photos/2025-10-06/pic.jpg) or absolute URLs.
+    function parsePhotos(raw) {
+      if (!raw) return [];
+      try {
+        const t = raw.trim();
+        if (!t) return [];
+        if (t.startsWith('[')) {
+          const arr = JSON.parse(t);
+          return Array.isArray(arr) ? arr.map(String).map(s => s.trim()).filter(Boolean) : [];
+        }
+        const parts = t.split(/[|;]+/).map(s => s.trim()).filter(Boolean);
+        return parts.length ? parts : [t];
+      } catch (_) {
+        return [];
+      }
+    }
+
     // ---------- Rendering ----------
-    function renderSeasons(){
-      const years = Object.keys(state.seasons).sort((a,b)=>b.localeCompare(a));
-      seasonSelect.innerHTML = years.map(y=>`<option value="${y}" ${y===state.currentSeason?'selected':''}>${y}</option>`).join('');
+    function renderSeasons() {
+      const years = Object.keys(state.seasons).sort((a, b) => b.localeCompare(a));
+      seasonSelect.innerHTML = years.map(y => `<option value="${y}" ${y === state.currentSeason ? 'selected' : ''}>${y}</option>`).join('');
       $('#seasonLabel').textContent = `Season ${state.currentSeason} · ${state.seasons[state.currentSeason].quizzes.length} quizzes`;
     }
 
-    function getSeason(){ return state.seasons[state.currentSeason]; }
+    function getSeason() { return state.seasons[state.currentSeason]; }
 
-    function computeLeaderboard(){
+    function computeLeaderboard() {
       const s = getSeason();
       const quizzes = s.quizzes || [];
-      const total = quizzes.reduce((a,q)=> a + (Number(q.points)||0), 0);
-      const best = quizzes.reduce((m,q)=> Math.max(m, Number(q.points)||0), 0);
+      const total = quizzes.reduce((a, q) => a + (Number(q.points) || 0), 0);
+      const best = quizzes.reduce((m, q) => Math.max(m, Number(q.points) || 0), 0);
       const avg = quizzes.length ? total / quizzes.length : 0;
       return [{ team: s.team || TEAM_NAME, quizzes: quizzes.length, total, average: avg, best }];
     }
 
-    function renderLeaderboard(){
+    function renderLeaderboard() {
       const tbody = $('#leaderboard tbody');
       const rows = computeLeaderboard();
-      tbody.innerHTML = rows.map((r,i)=>{
+      tbody.innerHTML = rows.map((r, i) => {
         const medal = '🥇';
         return `<tr>
-          <td class="rank">${i+1} <span class="medal" title="Top 1">${medal}</span></td>
+          <td class="rank">${i + 1} <span class="medal" title="Top 1">${medal}</span></td>
           <td style="font-weight:700">${r.team}</td>
           <td>${r.quizzes}</td>
           <td>${fmt(r.total)}</td>
-          <td>${r.average? r.average.toFixed(2): '0.00'}</td>
+          <td>${r.average ? r.average.toFixed(2) : '0.00'}</td>
           <td>${fmt(r.best)}</td>
         </tr>`
       }).join('');
     }
 
-    function placeFromPoints(p){
-      if(p>=5) return '1st place';
-      if(p===4) return '2nd place';
-      if(p===3) return '3rd place';
+    function placeFromPoints(p) {
+      if (p >= 5) return '1st place';
+      if (p === 4) return '2nd place';
+      if (p === 3) return '3rd place';
       return '4th place or below';
     }
 
-    function renderHistory(){
+    function renderHistory() {
       const box = $('#quizHistory');
       const s = getSeason();
-      const quizzes = [...(s.quizzes||[])].sort((a,b)=> a.date.localeCompare(b.date)).reverse();
-      if(!quizzes.length){ box.innerHTML = '<p class="subtitle">No quizzes yet — click “Add Quiz”.</p>'; return; }
-      box.innerHTML = quizzes.map(q=>{
-        const meta = `${placeFromPoints(Number(q.points)||0)} • ${fmt(q.points)} pts • vs ${fmt(q.teams||0)} team${(q.teams||0)===1?'':'s'}`;
+      const quizzes = [...(s.quizzes || [])].sort((a, b) => a.date.localeCompare(b.date)).reverse();
+      if (!quizzes.length) { box.innerHTML = '<p class="subtitle">No quizzes yet — click “Add Quiz”.</p>'; return; }
+      box.innerHTML = quizzes.map(q => {
+        const meta = `${placeFromPoints(Number(q.points) || 0)} • ${fmt(q.points)} pts • vs ${fmt(q.teams || 0)} team${(q.teams || 0) === 1 ? '' : 's'}`;
         const details = `<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
           <tr><td>Points</td><td>${fmt(q.points)}</td></tr>
-          <tr><td>Teams</td><td>${fmt(q.teams||0)}</td></tr>
-          ${q.notes? `<tr><td>Notes</td><td>${q.notes}</td></tr>`:''}
+          <tr><td>Teams</td><td>${fmt(q.teams || 0)}</td></tr>
+          ${q.notes ? `<tr><td>Notes</td><td>${q.notes}</td></tr>` : ''}
         </tbody></table>`;
-          return `<details class="quiz-card">
+        const gallery = (q.photos && q.photos.length)
+          ? `<div class="subtitle" style="margin-top:10px">Photos</div>
+             <div class="photo-grid" data-date="${q.date}">
+               ${q.photos.map((src, i) => `<img src="${src}" loading="lazy" alt="Photo ${i + 1} from ${q.date}" class="photo-thumb" data-date="${q.date}" data-index="${i}">`).join('')}
+             </div>`
+          : '';
+        return `<details class="quiz-card">
             <summary>
               <div>
-                <div class="quiz-title">${new Date(q.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'short', day:'numeric'})}</div>
+                <div class="quiz-title">${new Date(q.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })}</div>
                 <div class="quiz-meta">${meta}</div>
               </div>
             </summary>
-            <div style="grid-column:1/-1; margin-top:10px">${details}</div>
+            <div style="grid-column:1/-1; margin-top:10px">${details}${gallery}</div>
           </details>`
       }).join('');
 
     }
 
-    function renderSeasonStats(){
+    function renderSeasonStats() {
       const s = getSeason();
-      const totalQuizzes = (s.quizzes||[]).length;
-      const latest = (s.quizzes||[]).map(q=>q.date).sort().pop();
+      const totalQuizzes = (s.quizzes || []).length;
+      const latest = (s.quizzes || []).map(q => q.date).sort().pop();
       const nextMonday = computeNextMonday();
-      const bestQuiz = (s.quizzes||[]).slice().sort((a,b)=> (b.points||0)-(a.points||0))[0];
-      const avgTeams = (s.quizzes||[]).length ? (s.quizzes.reduce((a,q)=> a + (Number(q.teams)||0),0) / s.quizzes.length) : 0;
+      const bestQuiz = (s.quizzes || []).slice().sort((a, b) => (b.points || 0) - (a.points || 0))[0];
+      const avgTeams = (s.quizzes || []).length ? (s.quizzes.reduce((a, q) => a + (Number(q.teams) || 0), 0) / s.quizzes.length) : 0;
 
       $('#seasonStats').innerHTML = `
         <div class="two-col">
@@ -413,13 +786,13 @@
             <div class="body">
               <div class="subtitle">Quizzes so far</div>
               <div class="glow" style="font-size:42px; font-weight:800">${fmt(totalQuizzes)}</div>
-              <div class="subtitle" style="margin-top:8px">Latest quiz: ${latest ? new Date(latest+'T00:00:00').toLocaleDateString() : '—'}</div>
+              <div class="subtitle" style="margin-top:8px">Latest quiz: ${latest ? new Date(latest + 'T00:00:00').toLocaleDateString() : '—'}</div>
             </div>
           </div>
           <div class="panel" style="padding:0">
             <div class="head"><h3 style="margin:0">Next Monday</h3></div>
             <div class="body">
-              <div class="glow" style="font-size:32px; font-weight:800">${nextMonday.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'})}</div>
+              <div class="glow" style="font-size:32px; font-weight:800">${nextMonday.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</div>
               <div class="subtitle">Ready for the next battle ✨</div>
             </div>
           </div>
@@ -427,19 +800,19 @@
         <div class="panel" style="margin-top:16px">
           <div class="head"><h3 style="margin:0">Highlights</h3></div>
           <div class="body">
-            <div>Average teams per quiz: <strong>${avgTeams? avgTeams.toFixed(1):'—'}</strong></div>
-            ${bestQuiz ? `<div>Best points: <strong>${fmt(bestQuiz.points)}</strong> on ${new Date(bestQuiz.date+'T00:00:00').toLocaleDateString()}</div>` : '<div class="subtitle">No data yet</div>'}
+            <div>Average teams per quiz: <strong>${avgTeams ? avgTeams.toFixed(1) : '—'}</strong></div>
+            ${bestQuiz ? `<div>Best points: <strong>${fmt(bestQuiz.points)}</strong> on ${new Date(bestQuiz.date + 'T00:00:00').toLocaleDateString()}</div>` : '<div class="subtitle">No data yet</div>'}
           </div>
         </div>`;
     }
 
     // ---------- Events ----------
     // Note: the interactive add/edit form was removed to simplify this build.
-    seasonSelect.addEventListener('change', async ()=>{ state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
+    seasonSelect.addEventListener('change', async () => { state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
 
     // Allow the user to clear the local cached copy and fetch fresh data from the repo.
-    $('#refreshBtn').addEventListener('click', async ()=>{
-      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    $('#refreshBtn').addEventListener('click', async () => {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
       toast('Cleared cached data — loading fresh');
       const year = state.currentSeason || String(new Date().getFullYear());
       await tryLoadCSVForSeason(year);
@@ -447,38 +820,101 @@
     });
 
     // ---------- Toast & Confetti ----------
-  function toast(msg){ const t = $('#toast'); if(t){ t.textContent = msg; t.classList.add('show'); setTimeout(()=> t.classList.remove('show'), 2200); } else { console.log('Toast:', msg); } }
+    function toast(msg) { const t = $('#toast'); if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); } else { console.log('Toast:', msg); } }
 
     // Minimal confetti effect
     const fx = document.getElementById('fx');
     const ctx = fx.getContext('2d');
     let particles = [];
-    function resize(){ fx.width = innerWidth; fx.height = innerHeight }
+    function resize() { fx.width = innerWidth; fx.height = innerHeight }
     addEventListener('resize', resize); resize();
-    function confetti(){
-      for(let i=0;i<80;i++){
-        particles.push({ x: Math.random()*fx.width, y: -20, vx: (Math.random()-0.5)*2, vy: 2 + Math.random()*2.5, r: 2 + Math.random()*4, a: 1 })
+    function confetti() {
+      for (let i = 0; i < 80; i++) {
+        particles.push({ x: Math.random() * fx.width, y: -20, vx: (Math.random() - 0.5) * 2, vy: 2 + Math.random() * 2.5, r: 2 + Math.random() * 4, a: 1 })
       }
     }
-    function tick(){
-      ctx.clearRect(0,0,fx.width,fx.height);
-      particles.forEach(p=>{
+    function tick() {
+      ctx.clearRect(0, 0, fx.width, fx.height);
+      particles.forEach(p => {
         p.x += p.vx; p.y += p.vy; p.a -= 0.008; p.vy += 0.02;
-        ctx.globalAlpha = Math.max(p.a,0);
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-        const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+        ctx.globalAlpha = Math.max(p.a, 0);
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
         g.addColorStop(0, 'rgba(34,211,238,1)');
         g.addColorStop(1, 'rgba(139,92,246,0)');
         ctx.fillStyle = g; ctx.fill();
       });
-      particles = particles.filter(p=> p.a>0 && p.y < fx.height+20);
+      particles = particles.filter(p => p.a > 0 && p.y < fx.height + 20);
       requestAnimationFrame(tick);
     }
     tick();
 
     // ---------- Boot ----------
-    async function renderAll(){ renderSeasons(); renderLeaderboard(); renderHistory(); renderSeasonStats(); }
-    (async ()=>{ await tryLoadCSVForSeason(state.currentSeason); renderAll(); })();
+    async function renderAll() { renderSeasons(); renderLeaderboard(); renderHistory(); renderSeasonStats(); }
+    (async () => { await tryLoadCSVForSeason(state.currentSeason); renderAll(); })();
+
+    // ---------- Photo modal logic ----------
+    const photoModal = document.getElementById('photoModal');
+    const photoImg = document.getElementById('photoImage');
+    const photoCaption = document.getElementById('photoCaption');
+    const photoPager = document.getElementById('photoPager');
+    const photoPrev = document.getElementById('photoPrev');
+    const photoNext = document.getElementById('photoNext');
+    const photoCloseBtn = document.getElementById('photoModalClose');
+    let currentPhotos = []; let currentIndex = 0; let currentDate = '';
+
+    function openGalleryFor(date, start = 0) {
+      const s = getSeason();
+      const q = (s.quizzes || []).find(x => x.date === date);
+      if (!q || !q.photos || !q.photos.length) return;
+      currentPhotos = q.photos.slice();
+      currentIndex = Math.min(Math.max(0, start), currentPhotos.length - 1);
+      currentDate = date;
+      showCurrentPhoto();
+      photoModal.classList.add('open');
+      photoModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeGallery() {
+      photoModal.classList.remove('open');
+      photoModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    function showCurrentPhoto() {
+      if (!currentPhotos.length) return;
+      const src = currentPhotos[currentIndex];
+      photoImg.src = src;
+      photoImg.alt = `Photo ${currentIndex + 1} of ${currentPhotos.length} from ${currentDate}`;
+      photoCaption.textContent = new Date(currentDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+      photoPager.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
+    }
+
+    function nextPhoto() { if (!currentPhotos.length) return; currentIndex = (currentIndex + 1) % currentPhotos.length; showCurrentPhoto(); }
+    function prevPhoto() { if (!currentPhotos.length) return; currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length; showCurrentPhoto(); }
+
+    // Event delegation for thumbnails
+    document.addEventListener('click', (e) => {
+      const img = e.target.closest('img.photo-thumb');
+      if (img) {
+        const date = img.dataset.date;
+        const idx = Number(img.dataset.index) || 0;
+        openGalleryFor(date, idx);
+      }
+    });
+    // Modal controls
+    photoPrev?.addEventListener('click', prevPhoto);
+    photoNext?.addEventListener('click', nextPhoto);
+    photoCloseBtn?.addEventListener('click', closeGallery);
+    photoModal?.addEventListener('click', (e) => { if (e.target === photoModal) closeGallery(); });
+    window.addEventListener('keydown', (e) => {
+      if (!photoModal.classList.contains('open')) return;
+      if (e.key === 'Escape') closeGallery();
+      if (e.key === 'ArrowRight') nextPhoto();
+      if (e.key === 'ArrowLeft') prevPhoto();
+    });
   </script>
 </body>
+
 </html>
