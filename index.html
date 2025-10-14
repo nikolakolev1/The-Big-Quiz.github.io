@@ -486,7 +486,7 @@
     <section class="panel">
       <div class="head">
         <h2>Quiz History</h2>
-        <div class="subtitle">Each entry: points (2–5) and number of teams we competed against</div>
+        <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
       </div>
       <div class="body" id="quizHistory"></div>
     </section>
@@ -609,6 +609,7 @@
         notes: header.indexOf('notes'),
         points: header.indexOf('points'),
         teams: header.indexOf('teams'),
+        place: header.findIndex(h => ['place', 'position', 'rank'].includes(h)),
         photos: header.findIndex(h => ['photos', 'images', 'pics', 'gallery'].includes(h))
       };
       const out = [];
@@ -621,6 +622,7 @@
           notes: (cols[idx.notes] || '').trim(),
           points: Number((cols[idx.points] || '').trim() || 0),
           teams: Number((cols[idx.teams] || '').trim() || 0),
+          place: idx.place >= 0 ? Number((cols[idx.place] || '').trim() || 0) : 0,
           photos: idx.photos >= 0 ? parsePhotos((cols[idx.photos] || '').trim()) : []
         };
         if (q.date) out.push(q);
@@ -740,14 +742,23 @@
       return '4th place or below';
     }
 
+    function getPlaceSuffix(place) {
+      if (place === 1) return 'st';
+      if (place === 2) return 'nd';
+      if (place === 3) return 'rd';
+      return 'th';
+    }
+
     function renderHistory() {
       const box = $('#quizHistory');
       const s = getSeason();
       const quizzes = [...(s.quizzes || [])].sort((a, b) => a.date.localeCompare(b.date)).reverse();
       if (!quizzes.length) { box.innerHTML = '<p class="subtitle">No quizzes yet — click “Add Quiz”.</p>'; return; }
       box.innerHTML = quizzes.map(q => {
-        const meta = `${placeFromPoints(Number(q.points) || 0)} • ${fmt(q.points)} pts • vs ${fmt(q.teams || 0)} team${(q.teams || 0) === 1 ? '' : 's'}`;
+        const placeInfo = q.place > 0 ? `${q.place}${getPlaceSuffix(q.place)} place` : placeFromPoints(Number(q.points) || 0);
+        const meta = `${placeInfo} • ${fmt(q.points)} pts • vs ${fmt(q.teams || 0)} team${(q.teams || 0) === 1 ? '' : 's'}`;
         const details = `<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+          ${q.place > 0 ? `<tr><td>Place</td><td>${q.place}${getPlaceSuffix(q.place)}</td></tr>` : ''}
           <tr><td>Points</td><td>${fmt(q.points)}</td></tr>
           <tr><td>Teams</td><td>${fmt(q.teams || 0)}</td></tr>
           ${q.notes ? `<tr><td>Notes</td><td>${q.notes}</td></tr>` : ''}
