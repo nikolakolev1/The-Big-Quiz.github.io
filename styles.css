@@ -278,6 +278,28 @@ details summary::-webkit-details-marker {
   display: none
 }
 
+/* Quiz history: when a card is opened, stack meta/date above the details/table
+   This overrides the two-column grid only for the open state so the compact
+   closed-card layout remains unchanged. */
+
+details.quiz-card[open] {
+  grid-template-columns: 1fr;
+}
+
+/* Make summary occupy full width and stack its inner content vertically
+   so the title and meta appear above the details content on open. */
+
+details.quiz-card > summary {
+  display: block;
+  width: 100%;
+}
+
+details.quiz-card > summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* Footer */
 footer {
   opacity: .8;
@@ -531,4 +553,3 @@ footer {
     font-size: 13px;
   }
 }
-
