@@ -529,7 +529,6 @@
                 <th>Quizzes</th>
                 <th>Total pts.</th>
                 <th>Average pts.</th>
-                <th>Best pts.</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -548,17 +547,17 @@
       </div>
     </section>
 
+      <!-- Quiz History -->
+      <section class="panel">
+          <div class="head">
+              <h2>Quiz History</h2>
+              <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
+          </div>
+          <div class="body" id="quizHistory"></div>
+      </section>
+
     <!-- Season Stats -->
     <section id="seasonStats" class="panel" style="margin-top:18px"></section>
-
-    <!-- Quiz History -->
-    <section class="panel">
-      <div class="head">
-        <h2>Quiz History</h2>
-        <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
-      </div>
-      <div class="body" id="quizHistory"></div>
-    </section>
   </main>
 
   <footer>
@@ -886,9 +885,8 @@
       const s = getSeason();
       const quizzes = s.quizzes || [];
       const total = quizzes.reduce((a, q) => a + (Number(q.points) || 0), 0);
-      const best = quizzes.reduce((m, q) => Math.max(m, Number(q.points) || 0), 0);
       const avg = quizzes.length ? total / quizzes.length : 0;
-      return [{ team: s.team || TEAM_NAME, quizzes: quizzes.length, total, average: avg, best }];
+      return [{ team: s.team || TEAM_NAME, quizzes: quizzes.length, total, average: avg }];
     }
 
     function renderLeaderboard() {
@@ -902,7 +900,6 @@
           <td>${r.quizzes}</td>
           <td>${fmt(r.total)}</td>
           <td>${r.average ? r.average.toFixed(2) : '0.00'}</td>
-          <td>${fmt(r.best)}</td>
         </tr>`
       }).join('');
     }
@@ -997,7 +994,7 @@
         { type: 'link', name: 'Quiz Rules & Format', url: 'https://www.thebigquiz.co.uk/', icon: '📋' },
         { type: 'photo', name: 'Team Photo Album', url: 'photos/2025-10-20/IMG_2821.jpeg', thumbnail: 'photos/2025-10-20/IMG_2821.jpeg' }
       ];
-      
+
       if (!quickAccessItems || quickAccessItems.length === 0) {
         list.innerHTML = '<li class="quick-access-empty">No quick access items yet</li>';
         return;
