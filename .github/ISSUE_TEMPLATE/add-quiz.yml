@@ -1,7 +1,7 @@
 name: Add Quiz Entry
 description: Add a new quiz result with photos and attendance
-title: "[Quiz] "
-labels: ["quiz-entry"]
+labels: ['quiz-entry']
+title: 'Quiz entry: {{date}}'
 body:
   - type: markdown
     attributes:

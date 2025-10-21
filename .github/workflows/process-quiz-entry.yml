@@ -20,12 +20,14 @@ jobs:
             const action = context.payload.action;
             const label = context.payload.label ? context.payload.label.name : null;
             const issueLabels = context.payload.issue && context.payload.issue.labels ? context.payload.issue.labels.map(l => l.name) : [];
+            const body = context.payload.issue && context.payload.issue.body ? context.payload.issue.body : '';
             console.log('event.action=', action);
             console.log('event.label=', label);
             console.log('issue.labels=', issueLabels);
+            // treat as quiz-entry if labeled or if opened and the form marker exists in the body
             const isQuiz =
               (action === 'labeled' && label === 'quiz-entry') ||
-              (action === 'opened' && issueLabels.includes('quiz-entry'));
+              (action === 'opened' && (issueLabels.includes('quiz-entry') || /###\s*Quiz Date/i.test(body)));
             if (!isQuiz) {
               core.setFailed('Not a quiz-entry event — aborting. Check the event payload in the run details.');
             }
