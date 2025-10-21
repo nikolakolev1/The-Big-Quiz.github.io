@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/data/quick-resources.json">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/data/quick-resources.json" />
+              <option name="updatedContent" value="[&#10;  {&#10;    &quot;type&quot;: &quot;photo&quot;,&#10;    &quot;title&quot;: &quot;Group — 06 Oct 2025&quot;,&#10;    &quot;url&quot;: &quot;photos/06-10-2025-group-photo-1.jpeg&quot;,&#10;    &quot;notes&quot;: &quot;Team picture from 6 Oct&quot;&#10;  },&#10;  {&#10;    &quot;type&quot;: &quot;photo&quot;,&#10;    &quot;title&quot;: &quot;Trophy — 06 Oct 2025&quot;,&#10;    &quot;url&quot;: &quot;photos/06-10-2025-trophy-photo-1.JPEG&quot;,&#10;    &quot;notes&quot;: &quot;Our trophy&quot;&#10;  },&#10;  {&#10;    &quot;type&quot;: &quot;link&quot;,&#10;    &quot;title&quot;: &quot;World Capitals facts&quot;,&#10;    &quot;url&quot;: &quot;https://en.wikipedia.org/wiki/List_of_national_capitals&quot;,&#10;    &quot;notes&quot;: &quot;Quick reference for capital cities&quot;&#10;  }&#10;]" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
