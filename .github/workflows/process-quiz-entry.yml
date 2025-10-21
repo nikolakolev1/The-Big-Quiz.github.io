@@ -2,8 +2,8 @@ name: Process Quiz Entry
 
 on:
   issues:
-    types: [opened, labeled]
-  workflow_dispatch: {}
+    types: [ opened, labeled ]
+  workflow_dispatch: { }
 
 jobs:
   process-quiz:
@@ -31,6 +31,36 @@ jobs:
             if (!isQuiz) {
               core.setFailed('Not a quiz-entry event — aborting. Check the event payload in the run details.');
             }
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          # optionally set ref if CSV lives on another branch:
+          # ref: gh-pages
+          # if data is a submodule, uncomment:
+          # submodules: 'recursive'
+
+      - name: Debug repo contents (verify CSV exists)
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Current branch:"
+          git branch --show-current || echo "(no branch)"
+          echo "Remote refs:"
+          git remote -v
+          echo "--- Root files ---"
+          ls -la
+          echo "--- data directory ---"
+          ls -la data || echo "`data/` directory not present"
+          echo "--- CSV check ---"
+          if [ -f data/season-2025.csv ]; then
+            echo "`data/season-2025.csv` FOUND"
+            echo "First 20 lines:"
+            sed -n '1,20p' data/season-2025.csv
+          else
+            echo "`data/season-2025.csv` NOT FOUND"
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -135,15 +165,15 @@ jobs:
           try:
               with urllib.request.urlopen(req) as response:
                   issue_data = json.loads(response.read().decode())
-              
+          
               # Extract image URLs from issue body
               photo_urls = re.findall(r'!\[.*?\]\((https://[^\)]+)\)', issue_body)
               # Also look for direct image links
               photo_urls.extend(re.findall(r'https://(?:user-images\.githubusercontent\.com|github\.com/.*?/assets)/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp)', issue_body, re.IGNORECASE))
-              
+          
               # Remove duplicates
               photo_urls = list(set(photo_urls))
-              
+          
               print(f"Found {len(photo_urls)} photos in issue")
               for url in photo_urls:
                   print(f"  - {url}")
@@ -163,11 +193,11 @@ jobs:
                   # Determine file extension from URL
                   ext_match = re.search(r'\.(jpg|jpeg|png|gif|webp)(\?|$)', url, re.IGNORECASE)
                   ext = ext_match.group(1).lower() if ext_match else 'jpg'
-                  
+          
                   # Create filename
                   filename = f"photo-{i}.{ext}"
                   filepath = os.path.join(photos_dir, filename)
-                  
+          
                   # Download the photo
                   print(f"Downloading {url} to {filepath}")
                   urllib.request.urlretrieve(url, filepath)
@@ -190,20 +220,20 @@ jobs:
           try:
               with open(season_file, 'r', encoding='utf-8-sig') as f:
                   content = f.read()
-              
+          
               # Parse existing CSV to maintain structure
               lines = content.strip().split('\n')
-              
+          
               # Create new row (format matches existing: date in DD.MM.YYYY format)
               new_row = f'{date_str},"{notes}",{points},{teams},{place},{photos_str}'
-              
+          
               # Insert after header (line 0 is header, insert at line 1)
               lines.insert(1, new_row)
-              
+          
               # Write back
               with open(season_file, 'w', encoding='utf-8') as f:
                   f.write('\n'.join(lines))
-              
+          
               print(f"✓ Added row to {season_file}")
               print(f"  Row: {new_row}")
           except Exception as e:
@@ -217,20 +247,20 @@ jobs:
           try:
               with open(presence_file, 'r', encoding='utf-8-sig') as f:
                   content = f.read()
-              
+          
               lines = content.strip().split('\n')
-              
+          
               # Create new row for presence
               presence_row = f'{date_str},{",".join(attendance)}'
-              
+          
               # Find insertion point - after header, keeping chronological order
               # For now, insert after header (line 0)
               lines.insert(1, presence_row)
-              
+          
               # Write back
               with open(presence_file, 'w', encoding='utf-8') as f:
                   f.write('\n'.join(lines))
-              
+          
               print(f"✓ Added row to {presence_file}")
               print(f"  Row: {presence_row}")
           except Exception as e:
