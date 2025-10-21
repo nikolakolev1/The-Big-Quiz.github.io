@@ -1,3 +1,36 @@
+# Quick Access to Important Files
+
+The dashboard includes a "Quick Access to Important Files" section that displays helpful links and resources.
+
+## Customizing Quick Access Items
+
+To customize the items shown in the Quick Access section, edit the `renderQuickAccess()` function in `index.html` (around line 820).
+
+The `quickAccessItems` array accepts objects with these properties:
+- `type`: Either `'link'` or `'photo'`
+- `name`: Display name for the item
+- `url`: Target URL (external link or path to file)
+- `icon`: (optional) Emoji icon for links (default: 🔗)
+- `thumbnail`: (optional) Thumbnail image path for photos
+
+### Example:
+
+```javascript
+const quickAccessItems = [
+  { type: 'link', name: 'The Big Quiz @ The Academy', url: 'https://www.facebook.com/TheBigQuizUK', icon: '🔗' },
+  { type: 'link', name: 'Quiz Rules & Format', url: 'https://www.thebigquiz.co.uk/', icon: '📋' },
+  { type: 'photo', name: 'Team Photo Album', url: 'photos/2025-10-20/IMG_2821.jpeg', thumbnail: 'photos/2025-10-20/IMG_2821.jpeg' }
+];
+```
+
+**Notes:**
+- All items are directly clickable (no separate "Open" button)
+- External links open in a new tab with `target="_blank" rel="noopener noreferrer"`
+- Photos can be relative paths or absolute URLs
+- The section is automatically responsive and compact
+
+---
+
 # Photos per quiz — how to add
 
 You can attach photos to each quiz by adding a Photos column in your season CSV and placing the image files in your repo.
