@@ -471,3 +471,64 @@ footer {
   padding: 12px 0;
 }
 
+/* Team Presence Visualization */
+.presence-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.presence-bar-item {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.presence-name {
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+  font-size: 14px;
+}
+
+.presence-bar-container {
+  position: relative;
+  height: 32px;
+  background: rgba(10, 20, 40, .6);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .07);
+  overflow: hidden;
+}
+
+.presence-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  min-width: 40px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 12px rgba(139, 92, 246, .4);
+}
+
+.presence-count {
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+}
+
+@media (max-width: 600px) {
+  .presence-bar-item {
+    grid-template-columns: 100px 1fr;
+    gap: 8px;
+  }
+  
+  .presence-name {
+    font-size: 13px;
+  }
+}
+

@@ -380,9 +380,98 @@ function tick() {
 }
 tick();
 
+// ---------- Team Presence ----------
+let presenceData = null;
+
+async function loadPresenceData() {
+  const urlCsv = `data/presence.csv?v=${Date.now()}`;
+  try {
+    const res = await fetch(urlCsv, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Presence CSV not found (${res.status})`);
+    const text = await res.text();
+    presenceData = parsePresenceCSV(text);
+  } catch (e) {
+    console.warn('Failed to load presence data:', e.message);
+    presenceData = null;
+  }
+}
+
+function parsePresenceCSV(text) {
+  const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+  if (!lines.length) return null;
+  
+  // First line contains team member names (skip first empty column)
+  const header = splitCSVLine(lines[0]);
+  const teamMembers = header.slice(1).map(name => name.trim()).filter(Boolean);
+  
+  // Initialize counts
+  const counts = {};
+  teamMembers.forEach(name => counts[name] = 0);
+  
+  // Parse each attendance row
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line || !line.trim()) continue;
+    const cols = splitCSVLine(line);
+    
+    // Skip the date column (first column) and count "yes" values
+    for (let j = 1; j < cols.length && j <= teamMembers.length; j++) {
+      const value = (cols[j] || '').trim().toLowerCase();
+      if (value === 'yes') {
+        counts[teamMembers[j - 1]]++;
+      }
+    }
+  }
+  
+  return { teamMembers, counts };
+}
+
+function renderTeamPresence() {
+  const container = $('#teamPresenceSection');
+  if (!container) return;
+  
+  if (!presenceData) {
+    container.innerHTML = '<div class="subtitle" style="padding: 18px;">Presence data not available</div>';
+    return;
+  }
+  
+  const { teamMembers, counts } = presenceData;
+  const maxCount = Math.max(...Object.values(counts), 1);
+  
+  // Sort by count descending for better visualization
+  const sortedMembers = [...teamMembers].sort((a, b) => counts[b] - counts[a]);
+  
+  const barsHtml = sortedMembers.map(name => {
+    const count = counts[name];
+    const percentage = (count / maxCount) * 100;
+    return `
+      <div class="presence-bar-item">
+        <div class="presence-name">${name}</div>
+        <div class="presence-bar-container">
+          <div class="presence-bar" style="width: ${percentage}%">
+            <span class="presence-count">${count}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <div class="head">
+      <h2>Team Member Presence</h2>
+      <div class="subtitle">Number of quizzes attended by each team member</div>
+    </div>
+    <div class="body">
+      <div class="presence-bars">
+        ${barsHtml}
+      </div>
+    </div>
+  `;
+}
+
 // ---------- Boot ----------
-async function renderAll() { renderSeasons(); renderLeaderboard(); renderQuickAccess(); renderHistory(); renderSeasonStats(); }
-(async () => { await tryLoadCSVForSeason(state.currentSeason); renderAll(); })();
+async function renderAll() { renderSeasons(); renderLeaderboard(); renderQuickAccess(); renderHistory(); renderSeasonStats(); renderTeamPresence(); }
+(async () => { await tryLoadCSVForSeason(state.currentSeason); await loadPresenceData(); renderAll(); })();
 
 // ---------- Photo modal logic ----------
 const photoModal = document.getElementById('photoModal');
