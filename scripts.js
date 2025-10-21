@@ -319,11 +319,9 @@ function renderSeasonStats() {
 
 function renderQuickAccess() {
   const list = $('#quickAccessList');
-  // Demo quick access items - can be customized or loaded from data
   const quickAccessItems = [
-    { type: 'link', name: 'The Big Quiz @ The Academy', url: 'https://www.facebook.com/TheBigQuizUK', icon: '🔗' },
-    { type: 'link', name: 'Quiz Rules & Format', url: 'https://www.thebigquiz.co.uk/', icon: '📋' },
-    { type: 'photo', name: 'Team Photo Album', url: 'photos/2025-10-20/IMG_2821.jpeg', thumbnail: 'photos/2025-10-20/IMG_2821.jpeg' }
+    { type: 'link', name: 'БГ Царе', url: 'https://www.facebook.com/photo.php?fbid=633204463902604&id=164734567416265&set=a.370650973491289', icon: '📋' },
+    { type: 'photo', name: 'Trophy — 06 Oct 2025', url: 'photos/2025-10-06/06-10-2025-trophy-photo-1.JPEG', thumbnail: 'photos/2025-10-06/06-10-2025-trophy-photo-1.JPEG' }
   ];
 
   if (!quickAccessItems || quickAccessItems.length === 0) {
