@@ -289,6 +289,7 @@ function renderSeasonStats() {
   const nextMonday = computeNextMonday();
   const bestQuiz = (s.quizzes || []).slice().sort((a, b) => (b.points || 0) - (a.points || 0))[0];
   const avgTeams = (s.quizzes || []).length ? (s.quizzes.reduce((a, q) => a + (Number(q.teams) || 0), 0) / s.quizzes.length) : 0;
+  const avgPlace = (s.quizzes || []).length ? (s.quizzes.reduce((a, q) => a + (Number(q.place) || 0), 0) / s.quizzes.length) : 0;
 
   $('#seasonStats').innerHTML = `
         <div class="two-col">
@@ -311,7 +312,10 @@ function renderSeasonStats() {
         <div class="panel" style="margin-top:16px">
           <div class="head"><h3 style="margin:0">Highlights</h3></div>
           <div class="body">
+            <div>Average place: <strong>${avgPlace ? avgPlace.toFixed(1) : '—'}</strong></div>
+            ${bestQuiz ? `<div>Best place: <strong>${bestQuiz.place > 0 ? bestQuiz.place + getPlaceSuffix(bestQuiz.place) : placeFromPoints(bestQuiz.points)}</strong> on ${new Date(bestQuiz.date + 'T00:00:00').toLocaleDateString()}</div>` : ''}
             <div>Average teams per quiz: <strong>${avgTeams ? avgTeams.toFixed(1) : '—'}</strong></div>
+            <div>Most teams in a quiz: <strong>${s.quizzes && s.quizzes.length ? Math.max(...s.quizzes.map(q => q.teams || 0)) : '—'}</strong></div>
             ${bestQuiz ? `<div>Best points: <strong>${fmt(bestQuiz.points)}</strong> on ${new Date(bestQuiz.date + 'T00:00:00').toLocaleDateString()}</div>` : '<div class="subtitle">No data yet</div>'}
           </div>
         </div>`;
