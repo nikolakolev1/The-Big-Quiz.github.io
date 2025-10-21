@@ -3,26 +3,32 @@ name: Process Quiz Entry
 on:
   issues:
     types: [opened, labeled]
+  workflow_dispatch: {}
 
 jobs:
   process-quiz:
-    if: >-
-      (github.event.action == 'labeled' && github.event.label.name == 'quiz-entry')
-      ||
-      (github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'quiz-entry'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
 
     steps:
-      - name: Debug event payload
+      - name: Check event & debug payload
         uses: actions/github-script@v7
         with:
           script: |
-            console.log('event.action=', context.payload.action);
-            console.log('event.label=', context.payload.label ? context.payload.label.name : null);
-            console.log('issue.labels=', context.payload.issue && context.payload.issue.labels ? context.payload.issue.labels.map(l => l.name) : null);
+            const action = context.payload.action;
+            const label = context.payload.label ? context.payload.label.name : null;
+            const issueLabels = context.payload.issue && context.payload.issue.labels ? context.payload.issue.labels.map(l => l.name) : [];
+            console.log('event.action=', action);
+            console.log('event.label=', label);
+            console.log('issue.labels=', issueLabels);
+            const isQuiz =
+              (action === 'labeled' && label === 'quiz-entry') ||
+              (action === 'opened' && issueLabels.includes('quiz-entry'));
+            if (!isQuiz) {
+              core.setFailed('Not a quiz-entry event — aborting. Check the event payload in the run details.');
+            }
 
       - name: Set up Python
         uses: actions/setup-python@v5
