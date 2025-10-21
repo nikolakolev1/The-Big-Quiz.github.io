@@ -42,23 +42,33 @@
       box-sizing: border-box
     }
 
+    /* Replace fixed 100% height with min-height so layout isn't constrained */
     html,
     body {
-      height: 100%
+      min-height: 100%;
     }
 
     body {
       margin: 0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
       color: var(--text);
-      background: radial-gradient(1200px 600px at 10% 10%, #111a3a, transparent), radial-gradient(900px 600px at 90% 10%, #221144, transparent), radial-gradient(1000px 800px at 50% 100%, #0a1a2a, transparent), var(--bg);
+      /* Use scalable ellipse gradients (percentages) and ensure they do not repeat.
+         Fix the background so it continues smoothly on tall pages and scales with viewport. */
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 10% 10%, #111a3a 0%, rgba(17,26,58,0) 60%),
+        radial-gradient(ellipse at 90% 10%, #221144 0%, rgba(34,17,68,0) 60%),
+        radial-gradient(ellipse at 50% 100%, #0a1a2a 0%, rgba(10,26,42,0) 70%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
       overflow-x: hidden;
     }
 
-    /* Animated gradient veil */
+    /* Animated gradient veil - enlarge inset so it covers very tall pages */
     .veil {
       position: fixed;
-      inset: -40vmax;
+      inset: -100vmax; /* increased from -40vmax */
       background: conic-gradient(from 90deg at 50% 50%, rgba(34, 211, 238, .08), rgba(139, 92, 246, .12), rgba(244, 63, 94, .08), rgba(34, 211, 238, .12));
       filter: blur(80px);
       animation: spin 60s linear infinite;
@@ -499,8 +509,10 @@
             style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em">Season</span>
           <select id="seasonSelect"></select>
         </label>
-        <button id="refreshBtn" class="btn secondary" title="Clear cached data and reload from repo">Refresh
-          data</button>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px">
+          <button id="refreshBtn" class="btn secondary" title="Clear cached data and reload from repo">Refresh data</button>
+          <div id="seasonLabel" class="subtitle" style="font-size:12px; opacity:.9">Season info</div>
+        </div>
       </div>
     </div>
   </header>
@@ -519,9 +531,9 @@
                 <th class="rank">#</th>
                 <th>Team</th>
                 <th>Quizzes</th>
-                <th>Total</th>
-                <th>Average</th>
-                <th>Best</th>
+                <th>Total pts.</th>
+                <th>Average pts.</th>
+                <th>Best pts.</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -539,6 +551,9 @@
         </div>
       </div>
     </section>
+
+    <!-- Season Stats -->
+    <section id="seasonStats" class="panel" style="margin-top:18px"></section>
 
     <!-- Quiz History -->
     <section class="panel">
@@ -560,10 +575,10 @@
   </main>
 
   <footer>
-    Made with 💜 on GitHub Pages. Data can load from <code>data/season-YYYY.csv</code> if present in the repo, else from
-    your browser (localStorage).
+    Made with 💜 by Nikola on GitHub Pages.
   </footer>
   <div id="toast" class="toast" aria-live="polite"></div>
+
   <!-- Photo lightbox modal -->
   <div id="photoModal" class="modal" aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
@@ -587,6 +602,8 @@
     </div>
   </div>
 
+  <!-- Quick Access modal (removed: Quick Access is read-only via repo) -->
+
   <script>
     // ---------- Utilities ----------
     const $ = sel => document.querySelector(sel);
@@ -607,7 +624,8 @@
           ]
         }
       },
-      currentSeason: '2025'
+      currentSeason: '2025',
+      quickAccess: []
     };
 
     // Load initial in-memory state. We intentionally do NOT trust localStorage as the
@@ -618,6 +636,12 @@
     function load() {
       try {
         // Return a safe initial state (demo) — we'll replace it with fresh CSV data soon.
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          // Merge shallow so demoData provides missing keys
+          return Object.assign({}, demoData, parsed);
+        }
         return demoData;
       } catch (e) {
         return demoData;
@@ -627,6 +651,7 @@
 
     // ---------- State ----------
     let state = load();
+    if (!state.quickAccess) state.quickAccess = [];
     const seasonSelect = $('#seasonSelect');
 
     // ---------- CSV LOADING ----------
@@ -767,6 +792,86 @@
         return [];
       }
     }
+
+    // Compute the next Monday date (returns a Date object). If today is Monday, returns next week's Monday.
+    function computeNextMonday(from = new Date()) {
+      const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+      const day = d.getDay(); // 0 = Sun, 1 = Mon, ...
+      let daysUntil = (1 - day + 7) % 7; // days until Monday (0..6)
+      if (daysUntil === 0) daysUntil = 7; // if today is Monday, pick next Monday
+      d.setDate(d.getDate() + daysUntil);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+
+    // ---------- Quick Access (read-only from repo JSON) ----------
+    async function loadQuickResources() {
+      try {
+        const res = await fetch('data/quick-resources.json?v=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('quick resources not found');
+        const arr = await res.json();
+        state.quickAccess = Array.isArray(arr) ? arr : [];
+        return;
+      } catch (e) {
+        // fallback: keep whatever is in state (local demo or previously stored)
+        console.warn('Failed to load quick resources from repo:', e.message);
+        if (!state.quickAccess) state.quickAccess = [];
+      }
+    }
+
+    function renderQuickAccess() {
+      const list = $('#quickList');
+      const items = state.quickAccess || [];
+      if (!items.length) { list.innerHTML = '<div class="photo-empty">No quick resources yet — add them in <code>data/quick-resources.json</code> in the repo.</div>'; return; }
+      list.innerHTML = items.map((it, idx) => {
+        if (it.type === 'photo') {
+          return `<div style="display:flex; gap:10px; align-items:center; margin-bottom:10px" data-idx="${idx}">
+            <img src="${it.url}" alt="${it.title}" class="photo-thumb" style="width:110px; height:82px; object-fit:cover; border-radius:8px;" data-idx="${idx}" />
+            <div style="flex:1">
+              <div style="font-weight:700">${it.title}</div>
+              <div class="subtitle">${it.notes || ''}</div>
+              <div style="margin-top:8px; display:flex; gap:8px">
+                <button class="btn secondary quick-open" data-idx="${idx}">Open</button>
+              </div>
+            </div>
+          </div>`;
+        }
+        return `<div style="display:flex; gap:10px; align-items:center; margin-bottom:10px" data-idx="${idx}">
+          <div style="width:110px; height:82px; display:grid; place-items:center; border-radius:8px; background:#07111f; border:1px solid rgba(255,255,255,.04)">
+            <div style="text-align:center; padding:6px; font-weight:700">LINK</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:700">${it.title}</div>
+            <div class="subtitle"><a href="${it.url}" target="_blank" rel="noopener noreferrer" style="color:var(--muted)">${it.url}</a></div>
+            <div class="subtitle">${it.notes || ''}</div>
+            <div style="margin-top:8px; display:flex; gap:8px">
+              <a class="btn" href="${it.url}" target="_blank" rel="noopener noreferrer">Open</a>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Open a photo resource in the existing photo modal (single image)
+    function openPhotoResource(url, title) {
+      currentPhotos = [url];
+      currentIndex = 0;
+      currentDate = title || '';
+      showCurrentPhoto();
+      $('#photoModal').classList.add('open');
+      $('#photoModal').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Delegated quick list actions (open)
+    document.getElementById('quickList')?.addEventListener('click', (e) => {
+      const open = e.target.closest('.quick-open');
+      if (open) { const idx = Number(open.dataset.idx); const it = state.quickAccess[idx]; if (!it) return; if (it.type === 'photo') openPhotoResource(it.url, it.title); else window.open(it.url, '_blank', 'noopener'); return; }
+      const img = e.target.closest('img');
+      if (img && img.dataset.idx) {
+        const idx = Number(img.dataset.idx); const it = state.quickAccess[idx]; if (!it) return; if (it.type === 'photo') openPhotoResource(it.url, it.title);
+      }
+    });
 
     // ---------- Rendering ----------
     function renderSeasons() {
