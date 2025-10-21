@@ -35,8 +35,10 @@ The website will update within a few minutes!
 [**📝 Add Quiz Entry**](../../issues/new?template=add-quiz.yml) ← Click here to add a new quiz!
 
 ### Additional Resources
+- [⚡ Quick Reference](.github/QUICK_REFERENCE.md) - Fast lookup for fields and tips
 - [📖 Complete Guide](.github/QUIZ_ENTRY_GUIDE.md) - Detailed instructions and troubleshooting
 - [📋 Workflow Example](.github/WORKFLOW_EXAMPLE.md) - See exactly what happens step-by-step
+- [📊 Implementation Details](.github/IMPLEMENTATION_SUMMARY.md) - Technical documentation
 
 ---
 
