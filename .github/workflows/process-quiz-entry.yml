@@ -6,17 +6,23 @@ on:
 
 jobs:
   process-quiz:
-    if: contains(github.event.issue.labels.*.name, 'quiz-entry')
+    if: >-
+      (github.event.action == 'labeled' && github.event.label.name == 'quiz-entry')
+      ||
+      (github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'quiz-entry'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Debug event payload
+        uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('event.action=', context.payload.action);
+            console.log('event.label=', context.payload.label ? context.payload.label.name : null);
+            console.log('issue.labels=', context.payload.issue && context.payload.issue.labels ? context.payload.issue.labels.map(l => l.name) : null);
 
       - name: Set up Python
         uses: actions/setup-python@v5
