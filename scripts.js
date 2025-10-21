@@ -711,13 +711,14 @@ function renderTeamPresence() {
   container.innerHTML = `
     <div class="head">
       <h2>Team Member Presence</h2>
-      <div class="subtitle">Number of quizzes attended by each team member</div>
+      <div class="subtitle">Number of quizzes attended by each team member (only original G S '25 members)</div>
     </div>
     <div class="body">
       <div class="presence-bars">
         ${barsHtml}
       </div>
     </div>
+    <div class="subtitle">Notable mentions - Kalin, Magi, Dari</div>
   `;
 }
 
