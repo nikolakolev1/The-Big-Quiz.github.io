@@ -530,34 +530,81 @@ function renderQuickAccess() {
 }
 
 // ---------- Events ----------
-// Note: the interactive add/edit form was removed to simplify this build.
-seasonSelect.addEventListener('change', async () => { state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
-
+/**
+ * Handle season selector change event
+ */
+seasonSelect.addEventListener('change', async () => {
+  state.currentSeason = seasonSelect.value;
+  save(state);
+  await tryLoadCSVForSeason(state.currentSeason);
+  renderAll();
+});
 
 // ---------- Toast & Confetti ----------
-function toast(msg) { const t = $('#toast'); if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); } else { console.log('Toast:', msg); } }
+/**
+ * Display a toast notification
+ * @param {string} msg - Message to display
+ */
+function toast(msg) {
+  const t = $('#toast');
+  if (t) {
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), TOAST_DURATION_MS);
+  } else {
+    console.log('Toast:', msg);
+  }
+}
 
-// Minimal confetti effect
+// ---------- Confetti Effect ----------
 const fx = document.getElementById('fx');
 const ctx = fx.getContext('2d');
 let particles = [];
-function resize() { fx.width = innerWidth; fx.height = innerHeight }
-addEventListener('resize', resize); resize();
+
+/**
+ * Resize canvas to match window size
+ */
+function resize() {
+  fx.width = innerWidth;
+  fx.height = innerHeight;
+}
+addEventListener('resize', resize);
+resize();
+
+/**
+ * Trigger confetti animation
+ */
 function confetti() {
-  for (let i = 0; i < 80; i++) {
-    particles.push({ x: Math.random() * fx.width, y: -20, vx: (Math.random() - 0.5) * 2, vy: 2 + Math.random() * 2.5, r: 2 + Math.random() * 4, a: 1 })
+  for (let i = 0; i < CONFETTI_PARTICLE_COUNT; i++) {
+    particles.push({
+      x: Math.random() * fx.width,
+      y: -20,
+      vx: (Math.random() - 0.5) * 2,
+      vy: 2 + Math.random() * 2.5,
+      r: 2 + Math.random() * 4,
+      a: 1
+    });
   }
 }
+
+/**
+ * Animation tick for confetti particles
+ */
 function tick() {
   ctx.clearRect(0, 0, fx.width, fx.height);
   particles.forEach(p => {
-    p.x += p.vx; p.y += p.vy; p.a -= 0.008; p.vy += 0.02;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.a -= 0.008;
+    p.vy += 0.02;
     ctx.globalAlpha = Math.max(p.a, 0);
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
     g.addColorStop(0, 'rgba(34,211,238,1)');
     g.addColorStop(1, 'rgba(139,92,246,0)');
-    ctx.fillStyle = g; ctx.fill();
+    ctx.fillStyle = g;
+    ctx.fill();
   });
   particles = particles.filter(p => p.a > 0 && p.y < fx.height + 20);
   requestAnimationFrame(tick);
@@ -567,11 +614,16 @@ tick();
 // ---------- Team Presence ----------
 let presenceData = null;
 
+/**
+ * Load team presence data from CSV
+ */
 async function loadPresenceData() {
   const urlCsv = `data/presence.csv?v=${Date.now()}`;
   try {
     const res = await fetch(urlCsv, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Presence CSV not found (${res.status})`);
+    if (!res.ok) {
+      throw new Error(`Presence CSV not found (${res.status})`);
+    }
     const text = await res.text();
     presenceData = parsePresenceCSV(text);
   } catch (e) {
@@ -580,9 +632,16 @@ async function loadPresenceData() {
   }
 }
 
+/**
+ * Parse team presence CSV data
+ * @param {string} text - Raw CSV text
+ * @returns {Object|null} Object with teamMembers array and counts object, or null if invalid
+ */
 function parsePresenceCSV(text) {
   const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
-  if (!lines.length) return null;
+  if (!lines.length) {
+    return null;
+  }
   
   // First line contains team member names (skip first empty column)
   const header = splitCSVLine(lines[0]);
@@ -590,12 +649,16 @@ function parsePresenceCSV(text) {
   
   // Initialize counts
   const counts = {};
-  teamMembers.forEach(name => counts[name] = 0);
+  teamMembers.forEach(name => {
+    counts[name] = 0;
+  });
   
   // Parse each attendance row
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    if (!line || !line.trim()) continue;
+    if (!line || !line.trim()) {
+      continue;
+    }
     const cols = splitCSVLine(line);
     
     // Skip the date column (first column) and count "yes" values
@@ -610,9 +673,14 @@ function parsePresenceCSV(text) {
   return { teamMembers, counts };
 }
 
+/**
+ * Render team presence visualization
+ */
 function renderTeamPresence() {
   const container = $('#teamPresenceSection');
-  if (!container) return;
+  if (!container) {
+    return;
+  }
   
   if (!presenceData) {
     container.innerHTML = '<div class="subtitle" style="padding: 18px;">Presence data not available</div>';
@@ -653,11 +721,29 @@ function renderTeamPresence() {
   `;
 }
 
-// ---------- Boot ----------
-async function renderAll() { renderSeasons(); renderLeaderboard(); renderQuickAccess(); renderHistory(); renderSeasonStats(); renderTeamPresence(); }
-(async () => { await tryLoadCSVForSeason(state.currentSeason); await loadPresenceData(); renderAll(); })();
+// ---------- Main Rendering & Initialization ----------
+/**
+ * Render all UI components
+ */
+async function renderAll() {
+  renderSeasons();
+  renderLeaderboard();
+  renderQuickAccess();
+  renderHistory();
+  renderSeasonStats();
+  renderTeamPresence();
+}
 
-// ---------- Photo modal logic ----------
+/**
+ * Initialize application on page load
+ */
+(async () => {
+  await tryLoadCSVForSeason(state.currentSeason);
+  await loadPresenceData();
+  renderAll();
+})();
+
+// ---------- Photo Modal Logic ----------
 const photoModal = document.getElementById('photoModal');
 const photoImg = document.getElementById('photoImage');
 const photoCaption = document.getElementById('photoCaption');
@@ -665,12 +751,21 @@ const photoPager = document.getElementById('photoPager');
 const photoPrev = document.getElementById('photoPrev');
 const photoNext = document.getElementById('photoNext');
 const photoCloseBtn = document.getElementById('photoModalClose');
-let currentPhotos = []; let currentIndex = 0; let currentDate = '';
+let currentPhotos = [];
+let currentIndex = 0;
+let currentDate = '';
 
+/**
+ * Open photo gallery for a specific quiz date
+ * @param {string} date - Quiz date
+ * @param {number} [start=0] - Starting photo index
+ */
 function openGalleryFor(date, start = 0) {
   const s = getSeason();
   const q = (s.quizzes || []).find(x => x.date === date);
-  if (!q || !q.photos || !q.photos.length) return;
+  if (!q || !q.photos || !q.photos.length) {
+    return;
+  }
   currentPhotos = q.photos.slice();
   currentIndex = Math.min(Math.max(0, start), currentPhotos.length - 1);
   currentDate = date;
@@ -680,25 +775,58 @@ function openGalleryFor(date, start = 0) {
   document.body.style.overflow = 'hidden';
 }
 
+/**
+ * Close the photo gallery modal
+ */
 function closeGallery() {
   photoModal.classList.remove('open');
   photoModal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
 }
 
+/**
+ * Display the current photo in the gallery
+ */
 function showCurrentPhoto() {
-  if (!currentPhotos.length) return;
+  if (!currentPhotos.length) {
+    return;
+  }
   const src = currentPhotos[currentIndex];
   photoImg.src = src;
   photoImg.alt = `Photo ${currentIndex + 1} of ${currentPhotos.length} from ${currentDate}`;
-  photoCaption.textContent = new Date(currentDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+  photoCaption.textContent = new Date(currentDate + 'T00:00:00').toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
   photoPager.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
 }
 
-function nextPhoto() { if (!currentPhotos.length) return; currentIndex = (currentIndex + 1) % currentPhotos.length; showCurrentPhoto(); }
-function prevPhoto() { if (!currentPhotos.length) return; currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length; showCurrentPhoto(); }
+/**
+ * Navigate to next photo in gallery
+ */
+function nextPhoto() {
+  if (!currentPhotos.length) {
+    return;
+  }
+  currentIndex = (currentIndex + 1) % currentPhotos.length;
+  showCurrentPhoto();
+}
 
-// Event delegation for thumbnails
+/**
+ * Navigate to previous photo in gallery
+ */
+function prevPhoto() {
+  if (!currentPhotos.length) {
+    return;
+  }
+  currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length;
+  showCurrentPhoto();
+}
+
+// ---------- Event Listeners ----------
+// Event delegation for photo thumbnails
 document.addEventListener('click', (e) => {
   const img = e.target.closest('img.photo-thumb');
   if (img) {
@@ -707,14 +835,29 @@ document.addEventListener('click', (e) => {
     openGalleryFor(date, idx);
   }
 });
+
 // Modal controls
 photoPrev?.addEventListener('click', prevPhoto);
 photoNext?.addEventListener('click', nextPhoto);
 photoCloseBtn?.addEventListener('click', closeGallery);
-photoModal?.addEventListener('click', (e) => { if (e.target === photoModal) closeGallery(); });
+photoModal?.addEventListener('click', (e) => {
+  if (e.target === photoModal) {
+    closeGallery();
+  }
+});
+
+// Keyboard navigation for photo modal
 window.addEventListener('keydown', (e) => {
-  if (!photoModal.classList.contains('open')) return;
-  if (e.key === 'Escape') closeGallery();
-  if (e.key === 'ArrowRight') nextPhoto();
-  if (e.key === 'ArrowLeft') prevPhoto();
+  if (!photoModal.classList.contains('open')) {
+    return;
+  }
+  if (e.key === 'Escape') {
+    closeGallery();
+  }
+  if (e.key === 'ArrowRight') {
+    nextPhoto();
+  }
+  if (e.key === 'ArrowLeft') {
+    prevPhoto();
+  }
 });
