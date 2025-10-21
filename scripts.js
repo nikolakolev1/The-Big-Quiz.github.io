@@ -1,14 +1,42 @@
 // Extracted from index.html inline <script>
 
 // ---------- Utilities ----------
+/**
+ * Shorthand for document.querySelector
+ * @param {string} sel - CSS selector
+ * @returns {Element|null} The first matching element
+ */
 const $ = sel => document.querySelector(sel);
+
+/**
+ * Shorthand for document.querySelectorAll as array
+ * @param {string} sel - CSS selector
+ * @returns {Element[]} Array of matching elements
+ */
 const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+/**
+ * Format number with locale-specific formatting
+ * @param {number} n - Number to format
+ * @returns {string} Formatted number string
+ */
 const fmt = n => new Intl.NumberFormat().format(n);
 
+// ---------- Constants ----------
 const STORAGE_KEY = 'quizLeagueData:v2-singleTeam';
 const TEAM_NAME = 'Gorsko Slivovo';
+const POINTS_FOR_FIRST_PLACE = 5;
+const POINTS_FOR_SECOND_PLACE = 4;
+const POINTS_FOR_THIRD_PLACE = 3;
+const TOAST_DURATION_MS = 2200;
+const CONFETTI_PARTICLE_COUNT = 80;
+const CANVAS_BLUR_PX = 80;
 
-// Demo fallback
+// ---------- Demo Data ----------
+/**
+ * Fallback demo data for when no CSV is available
+ * @type {Object}
+ */
 const demoData = {
   seasons: {
     '2025': {
@@ -23,14 +51,18 @@ const demoData = {
   quickAccess: []
 };
 
-// Load initial in-memory state. We intentionally do NOT trust localStorage as the
-// authoritative source on boot because stale saved data is the main cause of "broken"
-// pages for users who keep old data in their browser. Instead we start from demoData
-// and prefer fetching a fresh CSV from the repo. localStorage is kept only as a
-// fallback when remote data is unavailable (offline or CSV missing).
+// ---------- State Management ----------
+/**
+ * Load initial state from localStorage with fallback to demo data.
+ * We intentionally do NOT trust localStorage as the authoritative source on boot
+ * because stale saved data is the main cause of "broken" pages for users who keep
+ * old data in their browser. Instead we start from demoData and prefer fetching
+ * a fresh CSV from the repo. localStorage is kept only as a fallback when remote
+ * data is unavailable (offline or CSV missing).
+ * @returns {Object} Initial state object
+ */
 function load() {
   try {
-    // Return a safe initial state (demo) — we'll replace it with fresh CSV data soon.
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -39,57 +71,106 @@ function load() {
     }
     return demoData;
   } catch (e) {
+    console.warn('Failed to load from localStorage:', e);
     return demoData;
   }
 }
-function save(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+/**
+ * Save state to localStorage
+ * @param {Object} data - State object to persist
+ */
+function save(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn('Failed to save to localStorage:', e);
+  }
+}
 
 // ---------- State ----------
 let state = load();
-if (!state.quickAccess) state.quickAccess = [];
+if (!state.quickAccess) {
+  state.quickAccess = [];
+}
 const seasonSelect = $('#seasonSelect');
 
-// ---------- CSV LOADING ----------
+// ---------- CSV Loading ----------
+/**
+ * Try to load CSV data for a specific season from the server
+ * @param {string} year - Season year to load
+ */
 async function tryLoadCSVForSeason(year) {
   const urlCsv = `data/season-${year}.csv?v=${Date.now()}`; // cache-bust GitHub Pages
   try {
     const res = await fetch(urlCsv, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`CSV not found (${res.status})`);
+    if (!res.ok) {
+      throw new Error(`CSV not found (${res.status})`);
+    }
     const text = await res.text();
     const quizzes = parseCSV(text);
-    if (!state.seasons) state.seasons = {};
-    if (!state.seasons[year]) state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
+    
+    if (!state.seasons) {
+      state.seasons = {};
+    }
+    if (!state.seasons[year]) {
+      state.seasons[year] = { team: TEAM_NAME, quizzes: [] };
+    }
+    
     state.seasons[year].quizzes = quizzes;
     state.currentSeason = year;
     save(state);
     toast(`Loaded CSV for ${year}`);
   } catch (e) {
     // Remote CSV failed. Try to fall back to any saved data in localStorage for this year.
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        if (saved && saved.seasons && saved.seasons[year]) {
-          // Use the locally-saved CSV as a fallback (offline / missing file)
-          if (!state.seasons) state.seasons = {};
-          state.seasons[year] = saved.seasons[year];
-          state.currentSeason = saved.currentSeason || year;
-          toast(`Using cached data for ${year}`);
-          return;
-        }
-      }
-    } catch (_) { /* ignore parse errors */ }
-
-    // If we reach here, there was no usable local fallback — stay with demo data.
-    toast('CSV not found for ' + year);
-    console.warn('CSV load skipped:', e.message);
+    const fallbackLoaded = tryLoadFromLocalStorage(year);
+    if (!fallbackLoaded) {
+      // If we reach here, there was no usable local fallback — stay with demo data.
+      toast(`CSV not found for ${year}`);
+      console.warn('CSV load skipped:', e.message);
+    }
   }
 }
 
-// Basic CSV parser supporting quoted fields + BOM-safe + Windows/Mac/Unix newlines
+/**
+ * Attempt to load season data from localStorage as fallback
+ * @param {string} year - Season year to load
+ * @returns {boolean} True if data was loaded successfully
+ */
+function tryLoadFromLocalStorage(year) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved && saved.seasons && saved.seasons[year]) {
+        // Use the locally-saved CSV as a fallback (offline / missing file)
+        if (!state.seasons) {
+          state.seasons = {};
+        }
+        state.seasons[year] = saved.seasons[year];
+        state.currentSeason = saved.currentSeason || year;
+        toast(`Using cached data for ${year}`);
+        return true;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load from localStorage fallback:', e);
+  }
+  return false;
+}
+
+// ---------- CSV Parsing ----------
+/**
+ * Basic CSV parser supporting quoted fields, BOM-safe, Windows/Mac/Unix newlines
+ * @param {string} text - Raw CSV text
+ * @returns {Array<Object>} Array of quiz objects
+ */
 function parseCSV(text) {
   const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
-  if (!lines.length) return [];
+  if (!lines.length) {
+    return [];
+  }
+  
   const header = splitCSVLine(lines[0]).map(h => h.trim().toLowerCase());
   const idx = {
     date: header.indexOf('date'),
@@ -99,10 +180,14 @@ function parseCSV(text) {
     place: header.findIndex(h => ['place', 'position', 'rank'].includes(h)),
     photos: header.findIndex(h => ['photos', 'images', 'pics', 'gallery'].includes(h))
   };
+  
   const out = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    if (!line || !line.trim()) continue;
+    if (!line || !line.trim()) {
+      continue;
+    }
+    
     const cols = splitCSVLine(line);
     const q = {
       date: normalizeDate((cols[idx.date] || '').trim()),
@@ -112,20 +197,36 @@ function parseCSV(text) {
       place: idx.place >= 0 ? Number((cols[idx.place] || '').trim() || 0) : 0,
       photos: idx.photos >= 0 ? parsePhotos((cols[idx.photos] || '').trim()) : []
     };
-    if (q.date) out.push(q);
+    
+    if (q.date) {
+      out.push(q);
+    }
   }
   return out;
 }
 
+/**
+ * Split a CSV line into fields, handling quoted values correctly
+ * @param {string} line - CSV line to split
+ * @returns {string[]} Array of field values
+ */
 function splitCSVLine(line) {
-  const out = []; let cur = ''; let inQ = false;
+  const out = [];
+  let cur = '';
+  let inQ = false;
+  
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
     if (ch === '"') {
-      if (inQ && line[i + 1] === '"') { cur += '"'; i++; } // escaped quote
-      else inQ = !inQ;
+      if (inQ && line[i + 1] === '"') {
+        cur += '"';
+        i++; // escaped quote
+      } else {
+        inQ = !inQ;
+      }
     } else if (ch === ',' && !inQ) {
-      out.push(cur); cur = '';
+      out.push(cur);
+      cur = '';
     } else {
       cur += ch;
     }
@@ -134,20 +235,33 @@ function splitCSVLine(line) {
   return out;
 }
 
-// Normalize date inputs to YYYY-MM-DD. Accepts:
-// - already YYYY-MM-DD
-// - YYYY/MM/DD
-// - DD.MM.YYYY or D.M.YYYY (user requested)
-// - fallback: Date parseable strings
+/**
+ * Normalize date inputs to YYYY-MM-DD format. Accepts:
+ * - YYYY-MM-DD (already normalized)
+ * - YYYY/MM/DD
+ * - DD.MM.YYYY or D.M.YYYY (also accepts '-' or '/' as separator)
+ * - Fallback: Date parseable strings
+ * @param {string} raw - Raw date string
+ * @returns {string} Normalized date string in YYYY-MM-DD format
+ */
 function normalizeDate(raw) {
-  if (!raw) return '';
+  if (!raw) {
+    return '';
+  }
   raw = raw.trim();
+  
   // ISO YYYY-MM-DD
   let m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  if (m) {
+    return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+  
   // ISO alternative YYYY/MM/DD
   m = raw.match(/^(\d{4})\/(\d{2})\/(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  if (m) {
+    return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+  
   // DD.MM.YYYY or D.M.YYYY, also accept '-' or '/'
   m = raw.match(/^(\d{1,2})[\.\-\/](\d{1,2})[\.\-\/](\d{4})$/);
   if (m) {
@@ -156,6 +270,7 @@ function normalizeDate(raw) {
     const yyyy = m[3];
     return `${yyyy}-${mm}-${dd}`;
   }
+  
   // Fallback: try Date parsing and format
   const dt = new Date(raw);
   if (!isNaN(dt.getTime())) {
@@ -164,62 +279,105 @@ function normalizeDate(raw) {
     const da = String(dt.getDate()).padStart(2, '0');
     return `${y}-${mo}-${da}`;
   }
+  
   return '';
 }
 
-// Accept photos as one of:
-// - Semicolon- or pipe-separated list: "img1.jpg; img2.jpg" or "img1.jpg|img2.jpg"
-// - JSON array string: ["img1.jpg", "img2.jpg"]
-// - Single path
-// Paths can be relative (e.g., photos/2025-10-06/pic.jpg) or absolute URLs.
+/**
+ * Accept photos as one of:
+ * - Semicolon- or pipe-separated list: "img1.jpg; img2.jpg" or "img1.jpg|img2.jpg"
+ * - JSON array string: ["img1.jpg", "img2.jpg"]
+ * - Single path
+ * Paths can be relative (e.g., photos/2025-10-06/pic.jpg) or absolute URLs.
+ * @param {string} raw - Raw photos string from CSV
+ * @returns {string[]} Array of photo paths
+ */
 function parsePhotos(raw) {
-  if (!raw) return [];
+  if (!raw) {
+    return [];
+  }
+  
   try {
     const t = raw.trim();
-    if (!t) return [];
+    if (!t) {
+      return [];
+    }
+    
     if (t.startsWith('[')) {
       const arr = JSON.parse(t);
       return Array.isArray(arr) ? arr.map(String).map(s => s.trim()).filter(Boolean) : [];
     }
+    
     const parts = t.split(/[|;]+/).map(s => s.trim()).filter(Boolean);
     return parts.length ? parts : [t];
-  } catch (_) {
+  } catch (e) {
+    console.warn('Failed to parse photos:', e);
     return [];
   }
 }
 
-// Compute the next Monday date (returns a Date object). If today is Monday, returns next week's Monday.
+/**
+ * Compute the next Monday date. If today is Monday, returns next week's Monday.
+ * @param {Date} [from=new Date()] - Starting date
+ * @returns {Date} Next Monday date
+ */
 function computeNextMonday(from = new Date()) {
   const d = new Date(from.getFullYear(), from.getMonth(), from.getDate());
   const day = d.getDay(); // 0 = Sun, 1 = Mon, ...
   let daysUntil = (1 - day + 7) % 7; // days until Monday (0..6)
-  if (daysUntil === 0) daysUntil = 7; // if today is Monday, pick next Monday
+  if (daysUntil === 0) {
+    daysUntil = 7; // if today is Monday, pick next Monday
+  }
   d.setDate(d.getDate() + daysUntil);
-  d.setHours(0,0,0,0);
+  d.setHours(0, 0, 0, 0);
   return d;
 }
 
 // ---------- Rendering ----------
+/**
+ * Render the season selector dropdown
+ */
 function renderSeasons() {
   const years = Object.keys(state.seasons).sort((a, b) => b.localeCompare(a));
-  seasonSelect.innerHTML = years.map(y => `<option value="${y}" ${y === state.currentSeason ? 'selected' : ''}>${y}</option>`).join('');
-  // The compact season label in the header was removed; update it only if present
+  seasonSelect.innerHTML = years
+    .map(y => `<option value="${y}" ${y === state.currentSeason ? 'selected' : ''}>${y}</option>`)
+    .join('');
+  
+  // Update compact season label if present
   const lbl = $('#seasonLabel');
   if (lbl && state.seasons && state.seasons[state.currentSeason]) {
     lbl.textContent = `Season ${state.currentSeason} · ${state.seasons[state.currentSeason].quizzes.length} quizzes`;
   }
 }
 
-function getSeason() { return state.seasons[state.currentSeason]; }
+/**
+ * Get the current season data
+ * @returns {Object} Current season object
+ */
+function getSeason() {
+  return state.seasons[state.currentSeason];
+}
 
+/**
+ * Compute leaderboard data for current season
+ * @returns {Array<Object>} Array of team statistics
+ */
 function computeLeaderboard() {
   const s = getSeason();
   const quizzes = s.quizzes || [];
   const total = quizzes.reduce((a, q) => a + (Number(q.points) || 0), 0);
   const avg = quizzes.length ? total / quizzes.length : 0;
-  return [{ team: s.team || TEAM_NAME, quizzes: quizzes.length, total, average: avg }];
+  return [{
+    team: s.team || TEAM_NAME,
+    quizzes: quizzes.length,
+    total,
+    average: avg
+  }];
 }
 
+/**
+ * Render the leaderboard table
+ */
 function renderLeaderboard() {
   const tbody = $('#leaderboard tbody');
   const rows = computeLeaderboard();
@@ -231,21 +389,43 @@ function renderLeaderboard() {
           <td>${r.quizzes}</td>
           <td>${fmt(r.total)}</td>
           <td>${r.average ? r.average.toFixed(2) : '0.00'}</td>
-        </tr>`
+        </tr>`;
   }).join('');
 }
 
+/**
+ * Get place description from points (when explicit place is not provided)
+ * @param {number} p - Points earned
+ * @returns {string} Place description
+ */
 function placeFromPoints(p) {
-  if (p >= 5) return '1st place';
-  if (p === 4) return '2nd place';
-  if (p === 3) return '3rd place';
+  if (p >= POINTS_FOR_FIRST_PLACE) {
+    return '1st place';
+  }
+  if (p === POINTS_FOR_SECOND_PLACE) {
+    return '2nd place';
+  }
+  if (p === POINTS_FOR_THIRD_PLACE) {
+    return '3rd place';
+  }
   return '4th place or below';
 }
 
+/**
+ * Get ordinal suffix for a place number (st, nd, rd, th)
+ * @param {number} place - Place number
+ * @returns {string} Ordinal suffix
+ */
 function getPlaceSuffix(place) {
-  if (place === 1) return 'st';
-  if (place === 2) return 'nd';
-  if (place === 3) return 'rd';
+  if (place === 1) {
+    return 'st';
+  }
+  if (place === 2) {
+    return 'nd';
+  }
+  if (place === 3) {
+    return 'rd';
+  }
   return 'th';
 }
 
@@ -350,34 +530,81 @@ function renderQuickAccess() {
 }
 
 // ---------- Events ----------
-// Note: the interactive add/edit form was removed to simplify this build.
-seasonSelect.addEventListener('change', async () => { state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
-
+/**
+ * Handle season selector change event
+ */
+seasonSelect.addEventListener('change', async () => {
+  state.currentSeason = seasonSelect.value;
+  save(state);
+  await tryLoadCSVForSeason(state.currentSeason);
+  renderAll();
+});
 
 // ---------- Toast & Confetti ----------
-function toast(msg) { const t = $('#toast'); if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); } else { console.log('Toast:', msg); } }
+/**
+ * Display a toast notification
+ * @param {string} msg - Message to display
+ */
+function toast(msg) {
+  const t = $('#toast');
+  if (t) {
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), TOAST_DURATION_MS);
+  } else {
+    console.log('Toast:', msg);
+  }
+}
 
-// Minimal confetti effect
+// ---------- Confetti Effect ----------
 const fx = document.getElementById('fx');
 const ctx = fx.getContext('2d');
 let particles = [];
-function resize() { fx.width = innerWidth; fx.height = innerHeight }
-addEventListener('resize', resize); resize();
+
+/**
+ * Resize canvas to match window size
+ */
+function resize() {
+  fx.width = innerWidth;
+  fx.height = innerHeight;
+}
+addEventListener('resize', resize);
+resize();
+
+/**
+ * Trigger confetti animation
+ */
 function confetti() {
-  for (let i = 0; i < 80; i++) {
-    particles.push({ x: Math.random() * fx.width, y: -20, vx: (Math.random() - 0.5) * 2, vy: 2 + Math.random() * 2.5, r: 2 + Math.random() * 4, a: 1 })
+  for (let i = 0; i < CONFETTI_PARTICLE_COUNT; i++) {
+    particles.push({
+      x: Math.random() * fx.width,
+      y: -20,
+      vx: (Math.random() - 0.5) * 2,
+      vy: 2 + Math.random() * 2.5,
+      r: 2 + Math.random() * 4,
+      a: 1
+    });
   }
 }
+
+/**
+ * Animation tick for confetti particles
+ */
 function tick() {
   ctx.clearRect(0, 0, fx.width, fx.height);
   particles.forEach(p => {
-    p.x += p.vx; p.y += p.vy; p.a -= 0.008; p.vy += 0.02;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.a -= 0.008;
+    p.vy += 0.02;
     ctx.globalAlpha = Math.max(p.a, 0);
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
     const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
     g.addColorStop(0, 'rgba(34,211,238,1)');
     g.addColorStop(1, 'rgba(139,92,246,0)');
-    ctx.fillStyle = g; ctx.fill();
+    ctx.fillStyle = g;
+    ctx.fill();
   });
   particles = particles.filter(p => p.a > 0 && p.y < fx.height + 20);
   requestAnimationFrame(tick);
@@ -387,11 +614,16 @@ tick();
 // ---------- Team Presence ----------
 let presenceData = null;
 
+/**
+ * Load team presence data from CSV
+ */
 async function loadPresenceData() {
   const urlCsv = `data/presence.csv?v=${Date.now()}`;
   try {
     const res = await fetch(urlCsv, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Presence CSV not found (${res.status})`);
+    if (!res.ok) {
+      throw new Error(`Presence CSV not found (${res.status})`);
+    }
     const text = await res.text();
     presenceData = parsePresenceCSV(text);
   } catch (e) {
@@ -400,9 +632,16 @@ async function loadPresenceData() {
   }
 }
 
+/**
+ * Parse team presence CSV data
+ * @param {string} text - Raw CSV text
+ * @returns {Object|null} Object with teamMembers array and counts object, or null if invalid
+ */
 function parsePresenceCSV(text) {
   const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
-  if (!lines.length) return null;
+  if (!lines.length) {
+    return null;
+  }
   
   // First line contains team member names (skip first empty column)
   const header = splitCSVLine(lines[0]);
@@ -410,12 +649,16 @@ function parsePresenceCSV(text) {
   
   // Initialize counts
   const counts = {};
-  teamMembers.forEach(name => counts[name] = 0);
+  teamMembers.forEach(name => {
+    counts[name] = 0;
+  });
   
   // Parse each attendance row
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    if (!line || !line.trim()) continue;
+    if (!line || !line.trim()) {
+      continue;
+    }
     const cols = splitCSVLine(line);
     
     // Skip the date column (first column) and count "yes" values
@@ -430,9 +673,14 @@ function parsePresenceCSV(text) {
   return { teamMembers, counts };
 }
 
+/**
+ * Render team presence visualization
+ */
 function renderTeamPresence() {
   const container = $('#teamPresenceSection');
-  if (!container) return;
+  if (!container) {
+    return;
+  }
   
   if (!presenceData) {
     container.innerHTML = '<div class="subtitle" style="padding: 18px;">Presence data not available</div>';
@@ -473,11 +721,29 @@ function renderTeamPresence() {
   `;
 }
 
-// ---------- Boot ----------
-async function renderAll() { renderSeasons(); renderLeaderboard(); renderQuickAccess(); renderHistory(); renderSeasonStats(); renderTeamPresence(); }
-(async () => { await tryLoadCSVForSeason(state.currentSeason); await loadPresenceData(); renderAll(); })();
+// ---------- Main Rendering & Initialization ----------
+/**
+ * Render all UI components
+ */
+async function renderAll() {
+  renderSeasons();
+  renderLeaderboard();
+  renderQuickAccess();
+  renderHistory();
+  renderSeasonStats();
+  renderTeamPresence();
+}
 
-// ---------- Photo modal logic ----------
+/**
+ * Initialize application on page load
+ */
+(async () => {
+  await tryLoadCSVForSeason(state.currentSeason);
+  await loadPresenceData();
+  renderAll();
+})();
+
+// ---------- Photo Modal Logic ----------
 const photoModal = document.getElementById('photoModal');
 const photoImg = document.getElementById('photoImage');
 const photoCaption = document.getElementById('photoCaption');
@@ -485,12 +751,21 @@ const photoPager = document.getElementById('photoPager');
 const photoPrev = document.getElementById('photoPrev');
 const photoNext = document.getElementById('photoNext');
 const photoCloseBtn = document.getElementById('photoModalClose');
-let currentPhotos = []; let currentIndex = 0; let currentDate = '';
+let currentPhotos = [];
+let currentIndex = 0;
+let currentDate = '';
 
+/**
+ * Open photo gallery for a specific quiz date
+ * @param {string} date - Quiz date
+ * @param {number} [start=0] - Starting photo index
+ */
 function openGalleryFor(date, start = 0) {
   const s = getSeason();
   const q = (s.quizzes || []).find(x => x.date === date);
-  if (!q || !q.photos || !q.photos.length) return;
+  if (!q || !q.photos || !q.photos.length) {
+    return;
+  }
   currentPhotos = q.photos.slice();
   currentIndex = Math.min(Math.max(0, start), currentPhotos.length - 1);
   currentDate = date;
@@ -500,25 +775,58 @@ function openGalleryFor(date, start = 0) {
   document.body.style.overflow = 'hidden';
 }
 
+/**
+ * Close the photo gallery modal
+ */
 function closeGallery() {
   photoModal.classList.remove('open');
   photoModal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
 }
 
+/**
+ * Display the current photo in the gallery
+ */
 function showCurrentPhoto() {
-  if (!currentPhotos.length) return;
+  if (!currentPhotos.length) {
+    return;
+  }
   const src = currentPhotos[currentIndex];
   photoImg.src = src;
   photoImg.alt = `Photo ${currentIndex + 1} of ${currentPhotos.length} from ${currentDate}`;
-  photoCaption.textContent = new Date(currentDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+  photoCaption.textContent = new Date(currentDate + 'T00:00:00').toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
   photoPager.textContent = `${currentIndex + 1} / ${currentPhotos.length}`;
 }
 
-function nextPhoto() { if (!currentPhotos.length) return; currentIndex = (currentIndex + 1) % currentPhotos.length; showCurrentPhoto(); }
-function prevPhoto() { if (!currentPhotos.length) return; currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length; showCurrentPhoto(); }
+/**
+ * Navigate to next photo in gallery
+ */
+function nextPhoto() {
+  if (!currentPhotos.length) {
+    return;
+  }
+  currentIndex = (currentIndex + 1) % currentPhotos.length;
+  showCurrentPhoto();
+}
 
-// Event delegation for thumbnails
+/**
+ * Navigate to previous photo in gallery
+ */
+function prevPhoto() {
+  if (!currentPhotos.length) {
+    return;
+  }
+  currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length;
+  showCurrentPhoto();
+}
+
+// ---------- Event Listeners ----------
+// Event delegation for photo thumbnails
 document.addEventListener('click', (e) => {
   const img = e.target.closest('img.photo-thumb');
   if (img) {
@@ -527,14 +835,29 @@ document.addEventListener('click', (e) => {
     openGalleryFor(date, idx);
   }
 });
+
 // Modal controls
 photoPrev?.addEventListener('click', prevPhoto);
 photoNext?.addEventListener('click', nextPhoto);
 photoCloseBtn?.addEventListener('click', closeGallery);
-photoModal?.addEventListener('click', (e) => { if (e.target === photoModal) closeGallery(); });
+photoModal?.addEventListener('click', (e) => {
+  if (e.target === photoModal) {
+    closeGallery();
+  }
+});
+
+// Keyboard navigation for photo modal
 window.addEventListener('keydown', (e) => {
-  if (!photoModal.classList.contains('open')) return;
-  if (e.key === 'Escape') closeGallery();
-  if (e.key === 'ArrowRight') nextPhoto();
-  if (e.key === 'ArrowLeft') prevPhoto();
+  if (!photoModal.classList.contains('open')) {
+    return;
+  }
+  if (e.key === 'Escape') {
+    closeGallery();
+  }
+  if (e.key === 'ArrowRight') {
+    nextPhoto();
+  }
+  if (e.key === 'ArrowLeft') {
+    prevPhoto();
+  }
 });

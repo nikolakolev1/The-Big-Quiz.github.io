@@ -1,40 +1,51 @@
+/* ========================================
+   CSS Variables - Color Scheme & Effects
+   ======================================== */
 :root {
-  --bg: #0b1020;
-  /* deep space */
-  --panel: #0f1530ee;
-  /* glass */
+  /* Background colors */
+  --bg: #0b1020;  /* deep space */
+  --panel: #0f1530ee;  /* glass panel */
+  
+  /* Text colors */
   --text: #ebefff;
   --muted: #9bb0ffcc;
-  --accent: #8b5cf6;
-  /* violet */
-  --accent-2: #22d3ee;
-  /* cyan */
-  --accent-3: #f43f5e;
-  /* rose */
+  
+  /* Accent colors */
+  --accent: #8b5cf6;  /* violet */
+  --accent-2: #22d3ee;  /* cyan */
+  --accent-3: #f43f5e;  /* rose */
   --gold: #f5c542;
+  
+  /* Status colors */
   --ok: #10b981;
   --bad: #ef4444;
+  
+  /* Effects */
   --shadow: 0 20px 60px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .05);
   --glass: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .02));
   --neon: 0 0 12px rgba(139, 92, 246, .65), 0 0 32px rgba(34, 211, 238, .35);
 }
 
+/* ========================================
+   Global Resets & Base Styles
+   ======================================== */
 * {
-  box-sizing: border-box
+  box-sizing: border-box;
 }
 
-/* Replace fixed 100% height with min-height so layout isn't constrained */
 html,
 body {
   min-height: 100%;
 }
 
+/* ========================================
+   Body & Background Styling
+   ======================================== */
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--text);
-  /* Use scalable ellipse gradients (percentages) and ensure they do not repeat.
-     Fix the background so it continues smoothly on tall pages and scales with viewport. */
+  /* Scalable ellipse gradients for smooth background on all page heights */
   background-color: var(--bg);
   background-image:
     radial-gradient(ellipse at 10% 10%, #111a3a 0%, rgba(17,26,58,0) 60%),
@@ -46,10 +57,10 @@ body {
   overflow-x: hidden;
 }
 
-/* Animated gradient veil - enlarge inset so it covers very tall pages */
+/* Animated gradient veil overlay */
 .veil {
   position: fixed;
-  inset: -100vmax; /* increased from -40vmax */
+  inset: -100vmax;
   background: conic-gradient(from 90deg at 50% 50%, rgba(34, 211, 238, .08), rgba(139, 92, 246, .12), rgba(244, 63, 94, .08), rgba(34, 211, 238, .12));
   filter: blur(80px);
   animation: spin 60s linear infinite;
@@ -59,10 +70,13 @@ body {
 
 @keyframes spin {
   to {
-    transform: rotate(360deg)
+    transform: rotate(360deg);
   }
 }
 
+/* ========================================
+   Header & Navigation
+   ======================================== */
 header {
   position: sticky;
   top: 0;
@@ -81,7 +95,7 @@ header {
 .brand {
   display: flex;
   align-items: center;
-  gap: 14px
+  gap: 14px;
 }
 
 .logo {
@@ -90,7 +104,7 @@ header {
   border-radius: 12px;
   background: radial-gradient(circle at 30% 30%, var(--accent-2), transparent 60%), radial-gradient(circle at 70% 70%, var(--accent), transparent 60%), linear-gradient(135deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, 0));
   box-shadow: var(--neon);
-  position: relative
+  position: relative;
 }
 
 .logo:after {
@@ -98,22 +112,24 @@ header {
   position: absolute;
   inset: 3px;
   border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, .25)
+  border: 1px solid rgba(255, 255, 255, .25);
 }
 
 h1.title {
   font-family: Orbitron, Inter, sans-serif;
   letter-spacing: .6px;
   font-size: clamp(20px, 2.7vw, 34px);
-  margin: 0
+  margin: 0;
 }
 
 .subtitle {
   color: var(--muted);
-  font-size: 14px
+  font-size: 14px;
 }
 
-/* Panels */
+/* ========================================
+   Panels & Cards
+   ======================================== */
 .grid {
   display: grid;
   grid-template-columns: 1.1fr .9fr;
@@ -133,7 +149,7 @@ h1.title {
   border: 1px solid rgba(255, 255, 255, .06);
   border-radius: 18px;
   box-shadow: var(--shadow);
-  overflow: hidden
+  overflow: hidden;
 }
 
 .panel .head {
@@ -141,19 +157,21 @@ h1.title {
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, .06)
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
 }
 
 .panel .head h2 {
   margin: 0;
-  font-size: 18px
+  font-size: 18px;
 }
 
 .panel .body {
-  padding: 18px
+  padding: 18px;
 }
 
-/* Buttons */
+/* ========================================
+   Buttons & Controls
+   ======================================== */
 .btn {
   appearance: none;
   border: 0;
@@ -163,36 +181,35 @@ h1.title {
   color: #07111f;
   background: linear-gradient(180deg, #fff, #cfe8ff);
   box-shadow: 0 8px 24px rgba(34, 211, 238, .25);
-  cursor: pointer
+  cursor: pointer;
 }
 
 .btn:hover {
-  filter: brightness(1.05)
+  filter: brightness(1.05);
 }
 
 .btn.secondary {
   color: var(--text);
   background: linear-gradient(180deg, #1a244a, #141a36);
-  border: 1px solid rgba(255, 255, 255, .1)
+  border: 1px solid rgba(255, 255, 255, .1);
 }
 
 .btn.ghost {
   background: transparent;
   color: var(--muted);
-  border: 1px dashed rgba(255, 255, 255, .2)
+  border: 1px dashed rgba(255, 255, 255, .2);
 }
 
 .btn.danger {
   background: linear-gradient(180deg, #fdd, #fca5a5);
-  color: #3b0d0d
+  color: #3b0d0d;
 }
 
-/* Controls row */
 .controls {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  align-items: center
+  align-items: center;
 }
 
 select,
@@ -210,10 +227,12 @@ textarea {
 }
 
 select {
-  cursor: pointer
+  cursor: pointer;
 }
 
-/* Leaderboard */
+/* ========================================
+   Tables & Leaderboard
+   ======================================== */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -226,29 +245,31 @@ thead th {
   color: var(--muted);
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, .1);
-  padding: 8px 8px
+  padding: 8px 8px;
 }
 
 tbody td {
   padding: 10px 8px;
-  border-bottom: 1px dashed rgba(255, 255, 255, .07)
+  border-bottom: 1px dashed rgba(255, 255, 255, .07);
 }
 
 tbody tr:hover {
-  background: rgba(255, 255, 255, .03)
+  background: rgba(255, 255, 255, .03);
 }
 
 .rank {
   width: 42px;
   text-align: center;
-  font-weight: 800
+  font-weight: 800;
 }
 
 .medal {
-  filter: drop-shadow(0 0 10px rgba(245, 197, 66, .6))
+  filter: drop-shadow(0 0 10px rgba(245, 197, 66, .6));
 }
 
-/* Quiz history */
+/* ========================================
+   Quiz History Cards
+   ======================================== */
 .quiz-card {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -258,36 +279,30 @@ tbody tr:hover {
   margin: 12px 0;
   border: 1px solid rgba(255, 255, 255, .07);
   border-radius: 14px;
-  background: rgba(10, 20, 40, .6)
+  background: rgba(10, 20, 40, .6);
 }
 
 .quiz-title {
-  font-weight: 700
+  font-weight: 700;
 }
 
 .quiz-meta {
-  color: var(--muted)
+  color: var(--muted);
 }
 
 details summary {
   cursor: pointer;
-  list-style: none
+  list-style: none;
 }
 
 details summary::-webkit-details-marker {
-  display: none
+  display: none;
 }
 
-/* Quiz history: when a card is opened, stack meta/date above the details/table
-   This overrides the two-column grid only for the open state so the compact
-   closed-card layout remains unchanged. */
-
+/* When quiz card is opened, stack content vertically */
 details.quiz-card[open] {
   grid-template-columns: 1fr;
 }
-
-/* Make summary occupy full width and stack its inner content vertically
-   so the title and meta appear above the details content on open. */
 
 details.quiz-card > summary {
   display: block;
@@ -300,16 +315,17 @@ details.quiz-card > summary > div {
   gap: 6px;
 }
 
-/* Footer */
+/* ========================================
+   Footer & Toast Notifications
+   ======================================== */
 footer {
   opacity: .8;
   color: var(--muted);
   font-size: 13px;
   text-align: center;
-  padding: 20px 10px
+  padding: 20px 10px;
 }
 
-/* Toast */
 .toast {
   position: fixed;
   right: 16px;
@@ -323,15 +339,17 @@ footer {
   opacity: 0;
   transform: translateY(12px);
   transition: all .25s ease;
-  z-index: 50
+  z-index: 50;
 }
 
 .toast.show {
   opacity: 1;
-  transform: translateY(0)
+  transform: translateY(0);
 }
 
-/* Modal */
+/* ========================================
+   Modal Dialogs
+   ======================================== */
 .modal {
   position: fixed;
   inset: 0;
@@ -341,11 +359,11 @@ footer {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  z-index: 40
+  z-index: 40;
 }
 
 .modal.open {
-  display: flex
+  display: flex;
 }
 
 .modal-card {
@@ -354,7 +372,7 @@ footer {
   background-image: var(--glass);
   border: 1px solid rgba(255, 255, 255, .07);
   border-radius: 18px;
-  box-shadow: var(--shadow)
+  box-shadow: var(--shadow);
 }
 
 .modal-card .head {
@@ -362,40 +380,45 @@ footer {
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, .06)
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
 }
 
 .modal-card .body {
-  padding: 18px
+  padding: 18px;
 }
 
+/* ========================================
+   Layout Utilities
+   ======================================== */
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px
+  gap: 16px;
 }
 
 @media (max-width: 800px) {
   .two-col {
-    grid-template-columns: 1fr
+    grid-template-columns: 1fr;
   }
 }
 
-/* Neon glow headline */
+/* Neon glow effect for headlines */
 .glow {
   color: #fff;
-  text-shadow: 0 0 8px rgba(139, 92, 246, .8), 0 0 22px rgba(34, 211, 238, .6)
+  text-shadow: 0 0 8px rgba(139, 92, 246, .8), 0 0 22px rgba(34, 211, 238, .6);
 }
 
-/* Confetti canvas */
+/* Confetti canvas overlay */
 #fx {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 60
+  z-index: 60;
 }
 
-/* Photos gallery */
+/* ========================================
+   Photo Gallery & Lightbox
+   ======================================== */
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
@@ -413,11 +436,32 @@ footer {
   transition: transform .15s ease, filter .15s ease;
   background: #0c1330;
 }
-.photo-thumb:hover { transform: translateY(-2px); filter: brightness(1.05); }
-.photo-empty { color: var(--muted); font-size: 13px; margin-top: 8px; }
 
-.photo-viewer { position: relative; display: grid; place-items: center; }
-.photo-viewer img { width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; background: #050814; }
+.photo-thumb:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.photo-empty {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.photo-viewer {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.photo-viewer img {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #050814;
+}
+
 .photo-nav {
   position: absolute;
   top: 50%;
@@ -425,18 +469,39 @@ footer {
   background: rgba(7, 17, 31, .7);
   border: 1px solid rgba(255,255,255,.1);
   color: var(--text);
-  width: 42px; height: 42px;
-  display: grid; place-items: center;
-  border-radius: 50%; cursor: pointer;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  cursor: pointer;
   box-shadow: var(--shadow);
   user-select: none;
 }
-.photo-nav:hover { filter: brightness(1.07); }
-.photo-nav.prev { left: 10px; }
-.photo-nav.next { right: 10px; }
-.photo-caption { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 
-/* Quick Access */
+.photo-nav:hover {
+  filter: brightness(1.07);
+}
+
+.photo-nav.prev {
+  left: 10px;
+}
+
+.photo-nav.next {
+  right: 10px;
+}
+
+.photo-caption {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ========================================
+   Quick Access Links
+   ======================================== */
 .quick-access-list {
   list-style: none;
   padding: 0;
@@ -445,6 +510,7 @@ footer {
   flex-direction: column;
   gap: 8px;
 }
+
 .quick-access-item {
   display: flex;
   align-items: center;
@@ -458,11 +524,13 @@ footer {
   text-decoration: none;
   color: var(--text);
 }
+
 .quick-access-item:hover {
   background: rgba(20, 30, 50, .8);
   border-color: rgba(255, 255, 255, .12);
   transform: translateX(2px);
 }
+
 .quick-access-icon {
   width: 36px;
   height: 36px;
@@ -472,6 +540,7 @@ footer {
   border: 1px solid rgba(255, 255, 255, .1);
   background: #0c1330;
 }
+
 .quick-access-link-icon {
   width: 36px;
   height: 36px;
@@ -483,17 +552,21 @@ footer {
   border: 1px solid rgba(255, 255, 255, .1);
   font-size: 18px;
 }
+
 .quick-access-name {
   flex: 1;
   font-weight: 500;
 }
+
 .quick-access-empty {
   color: var(--muted);
   font-size: 14px;
   padding: 12px 0;
 }
 
-/* Team Presence Visualization */
+/* ========================================
+   Team Presence Visualization
+   ======================================== */
 .presence-bars {
   display: flex;
   flex-direction: column;

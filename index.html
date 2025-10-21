@@ -4,25 +4,35 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Hint to browsers and proxies: try to avoid serving stale pages (best-effort only on static hosts) -->
+  
+  <!-- Cache control headers for static hosting -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  
   <title>Gorsko Slivovo — Monday Quiz League</title>
   <meta name="description"
     content="Public record of Gorsko Slivovo's Monday quiz results at The Big Quiz @ The Academy. Seasons by year, quiz history, and leaderboards." />
+  
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@600;800&display=swap"
     rel="stylesheet">
-  <!-- moved inline styles to styles.css -->
+  
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+  <!-- Confetti canvas overlay -->
   <canvas id="fx"></canvas>
+  
+  <!-- Animated background veil -->
   <div class="veil" aria-hidden="true"></div>
+  
+  <!-- Main header -->
   <header>
     <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; gap:16px">
       <div class="brand">
@@ -42,9 +52,10 @@
     </div>
   </header>
 
+  <!-- Main content -->
   <main class="wrap">
     <section class="grid">
-      <!-- Leaderboard panel (single-team summary) -->
+      <!-- Season leaderboard -->
       <div class="panel" id="leaderboardPanel">
         <div class="head">
           <h2>Season Points</h2>
@@ -76,14 +87,14 @@
       </div>
     </section>
 
-      <!-- Quiz History -->
-      <section class="panel">
-          <div class="head">
-              <h2>Quiz History</h2>
-              <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
-          </div>
-          <div class="body" id="quizHistory"></div>
-      </section>
+    <!-- Quiz History -->
+    <section class="panel">
+      <div class="head">
+        <h2>Quiz History</h2>
+        <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
+      </div>
+      <div class="body" id="quizHistory"></div>
+    </section>
 
     <!-- Season Stats -->
     <section id="seasonStats" class="panel" style="margin-top:18px"></section>
@@ -92,9 +103,12 @@
     <section id="teamPresenceSection" class="panel" style="margin-top:18px"></section>
   </main>
 
+  <!-- Footer -->
   <footer>
     Made with 💜 by Nikola on GitHub Pages.
   </footer>
+  
+  <!-- Toast notification -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
   <!-- Photo lightbox modal -->
@@ -120,9 +134,7 @@
     </div>
   </div>
 
-  <!-- Quick Access modal (removed: Quick Access is read-only via repo) -->
-
-  <!-- moved inline script to scripts.js -->
+  <!-- JavaScript -->
   <script src="scripts.js"></script>
 </body>
 
