@@ -256,7 +256,7 @@ function renderHistory() {
   if (!quizzes.length) { box.innerHTML = '<p class="subtitle">No quizzes yet — click “Add Quiz”.</p>'; return; }
   box.innerHTML = quizzes.map(q => {
     const placeInfo = q.place > 0 ? `${q.place}${getPlaceSuffix(q.place)} place` : placeFromPoints(Number(q.points) || 0);
-    const meta = `${placeInfo} • ${fmt(q.points)} pts • vs ${fmt(q.teams || 0)} team${(q.teams || 0) === 1 ? '' : 's'}`;
+    const meta = `${placeInfo} vs ${fmt(q.teams || 0)} team${(q.teams || 0) === 1 ? '' : 's'} • ${fmt(q.points)} pts`;
     const details = `<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
           ${q.place > 0 ? `<tr><td>Place</td><td>${q.place}${getPlaceSuffix(q.place)}</td></tr>` : ''}
           <tr><td>Points</td><td>${fmt(q.points)}</td></tr>
