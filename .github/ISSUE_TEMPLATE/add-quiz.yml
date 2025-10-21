@@ -1,0 +1,94 @@
+name: Add Quiz Entry
+description: Add a new quiz result with photos and attendance
+title: "[Quiz] "
+labels: ["quiz-entry"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Add a new quiz entry
+        Fill out the form below to add a new quiz to the website. All data will be automatically processed and added to the site.
+        
+        **Note:** After submitting, a GitHub Action will process your entry. Please attach all photos in the "Photos" section below.
+
+  - type: input
+    id: date
+    attributes:
+      label: Quiz Date
+      description: Enter the date in DD.MM.YYYY format (e.g., 20.10.2025)
+      placeholder: "20.10.2025"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Any notes about the quiz (e.g., who was missing, special events, etc.)
+      placeholder: "First quiz of the season"
+    validations:
+      required: true
+
+  - type: input
+    id: points
+    attributes:
+      label: Points
+      description: How many points we scored (2-5)
+      placeholder: "4"
+    validations:
+      required: true
+
+  - type: input
+    id: teams
+    attributes:
+      label: Total Teams
+      description: Total number of teams competing
+      placeholder: "18"
+    validations:
+      required: true
+
+  - type: input
+    id: place
+    attributes:
+      label: Our Place
+      description: What place we finished in
+      placeholder: "2"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: attendance
+    attributes:
+      label: Attendance
+      description: Select who was present at the quiz
+      options:
+        - label: Nikola K
+        - label: Asya R
+        - label: Radi R
+        - label: Niki G
+        - label: Kris V
+        - label: Desi D
+        - label: Georgi B
+        - label: Kati B
+        - label: Tedi S
+
+  - type: textarea
+    id: photos
+    attributes:
+      label: Photos
+      description: |
+        Drag and drop or paste your quiz photos here. All photos will be automatically organized into the correct folder.
+        You can attach multiple photos at once.
+      placeholder: "Drag and drop photos here or click to upload"
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        After submitting, the GitHub Action will:
+        1. Create a folder `photos/YYYY-MM-DD/` with your photos
+        2. Add a new row to `data/season-2025.csv`
+        3. Add a new row to `data/presence.csv`
+        4. Close this issue automatically

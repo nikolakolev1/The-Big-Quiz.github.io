@@ -1,0 +1,252 @@
+name: Process Quiz Entry
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process-quiz:
+    if: contains(github.event.issue.labels.*.name, 'quiz-entry')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Parse issue and process quiz entry
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+          import json
+          import csv
+          from datetime import datetime
+          import urllib.request
+          import urllib.parse
+
+          # Parse the issue body
+          issue_body = os.environ['ISSUE_BODY']
+          issue_number = os.environ['ISSUE_NUMBER']
+          github_token = os.environ['GITHUB_TOKEN']
+          repo = os.environ['REPO']
+
+          print("=== Parsing issue body ===")
+          print(issue_body)
+          print("========================")
+
+          # Extract fields from issue body
+          def extract_field(body, field_name):
+              # Match the field format from GitHub issue forms
+              pattern = rf'### {field_name}\s*\n\s*(.+?)(?=\n###|\Z)'
+              match = re.search(pattern, body, re.DOTALL | re.IGNORECASE)
+              if match:
+                  value = match.group(1).strip()
+                  # Remove "_No response_" placeholder
+                  if value == "_No response_":
+                      return ""
+                  return value
+              return ""
+
+          date_str = extract_field(issue_body, "Quiz Date")
+          notes = extract_field(issue_body, "Notes")
+          points = extract_field(issue_body, "Points")
+          teams = extract_field(issue_body, "Total Teams")
+          place = extract_field(issue_body, "Our Place")
+          attendance_section = extract_field(issue_body, "Attendance")
+
+          print(f"Date: {date_str}")
+          print(f"Notes: {notes}")
+          print(f"Points: {points}")
+          print(f"Teams: {teams}")
+          print(f"Place: {place}")
+          print(f"Attendance section: {attendance_section}")
+
+          # Validate required fields
+          if not all([date_str, notes, points, teams, place]):
+              print("ERROR: Missing required fields")
+              exit(1)
+
+          # Parse date from DD.MM.YYYY to YYYY-MM-DD
+          try:
+              date_parts = date_str.split('.')
+              if len(date_parts) == 3:
+                  day, month, year = date_parts
+                  date_normalized = f"{year.zfill(4)}-{month.zfill(2)}-{day.zfill(2)}"
+                  # Create folder name format
+                  folder_date = date_normalized
+              else:
+                  print(f"ERROR: Invalid date format: {date_str}")
+                  exit(1)
+          except Exception as e:
+              print(f"ERROR: Failed to parse date: {e}")
+              exit(1)
+
+          print(f"Normalized date: {date_normalized}")
+          print(f"Folder name: {folder_date}")
+
+          # Parse attendance (checkboxes)
+          attendance_names = ["Nikola K", "Asya R", "Radi R", "Niki G", "Kris V", "Desi D", "Georgi B", "Kati B", "Tedi S"]
+          attendance = []
+          for name in attendance_names:
+              # Check if the checkbox for this person is checked
+              if f"- [x] {name}" in attendance_section or f"- [X] {name}" in attendance_section:
+                  attendance.append("yes")
+              else:
+                  attendance.append("no")
+
+          print(f"Attendance parsed: {attendance}")
+
+          # Download photos from the issue
+          print("\n=== Fetching issue details for photos ===")
+          api_url = f"https://api.github.com/repos/{repo}/issues/{issue_number}"
+          req = urllib.request.Request(api_url)
+          req.add_header("Authorization", f"token {github_token}")
+          req.add_header("Accept", "application/vnd.github.v3+json")
+          
+          try:
+              with urllib.request.urlopen(req) as response:
+                  issue_data = json.loads(response.read().decode())
+              
+              # Extract image URLs from issue body
+              photo_urls = re.findall(r'!\[.*?\]\((https://[^\)]+)\)', issue_body)
+              # Also look for direct image links
+              photo_urls.extend(re.findall(r'https://(?:user-images\.githubusercontent\.com|github\.com/.*?/assets)/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp)', issue_body, re.IGNORECASE))
+              
+              # Remove duplicates
+              photo_urls = list(set(photo_urls))
+              
+              print(f"Found {len(photo_urls)} photos in issue")
+              for url in photo_urls:
+                  print(f"  - {url}")
+          except Exception as e:
+              print(f"Warning: Could not fetch issue details: {e}")
+              photo_urls = []
+
+          # Create photos directory
+          photos_dir = f"photos/{folder_date}"
+          os.makedirs(photos_dir, exist_ok=True)
+          print(f"\nCreated directory: {photos_dir}")
+
+          # Download photos
+          photo_filenames = []
+          for i, url in enumerate(photo_urls, 1):
+              try:
+                  # Determine file extension from URL
+                  ext_match = re.search(r'\.(jpg|jpeg|png|gif|webp)(\?|$)', url, re.IGNORECASE)
+                  ext = ext_match.group(1).lower() if ext_match else 'jpg'
+                  
+                  # Create filename
+                  filename = f"photo-{i}.{ext}"
+                  filepath = os.path.join(photos_dir, filename)
+                  
+                  # Download the photo
+                  print(f"Downloading {url} to {filepath}")
+                  urllib.request.urlretrieve(url, filepath)
+                  photo_filenames.append(f"{photos_dir}/{filename}")
+                  print(f"  ✓ Downloaded: {filename}")
+              except Exception as e:
+                  print(f"  ✗ Failed to download photo {i}: {e}")
+
+          # If no photos were found/downloaded, that's okay
+          if not photo_filenames:
+              print("No photos to download (this is okay)")
+
+          # Format photos string for CSV
+          photos_str = "; ".join(photo_filenames) if photo_filenames else ""
+
+          # Update season-2025.csv
+          season_file = "data/season-2025.csv"
+          print(f"\n=== Updating {season_file} ===")
+          
+          try:
+              with open(season_file, 'r', encoding='utf-8-sig') as f:
+                  content = f.read()
+              
+              # Parse existing CSV to maintain structure
+              lines = content.strip().split('\n')
+              
+              # Create new row (format matches existing: date in DD.MM.YYYY format)
+              new_row = f'{date_str},"{notes}",{points},{teams},{place},{photos_str}'
+              
+              # Insert after header (line 0 is header, insert at line 1)
+              lines.insert(1, new_row)
+              
+              # Write back
+              with open(season_file, 'w', encoding='utf-8') as f:
+                  f.write('\n'.join(lines))
+              
+              print(f"✓ Added row to {season_file}")
+              print(f"  Row: {new_row}")
+          except Exception as e:
+              print(f"ERROR: Failed to update {season_file}: {e}")
+              exit(1)
+
+          # Update presence.csv
+          presence_file = "data/presence.csv"
+          print(f"\n=== Updating {presence_file} ===")
+          
+          try:
+              with open(presence_file, 'r', encoding='utf-8-sig') as f:
+                  content = f.read()
+              
+              lines = content.strip().split('\n')
+              
+              # Create new row for presence
+              presence_row = f'{date_str},{",".join(attendance)}'
+              
+              # Find insertion point - after header, keeping chronological order
+              # For now, insert after header (line 0)
+              lines.insert(1, presence_row)
+              
+              # Write back
+              with open(presence_file, 'w', encoding='utf-8') as f:
+                  f.write('\n'.join(lines))
+              
+              print(f"✓ Added row to {presence_file}")
+              print(f"  Row: {presence_row}")
+          except Exception as e:
+              print(f"ERROR: Failed to update {presence_file}: {e}")
+              exit(1)
+
+          print("\n=== ✓ All updates completed successfully ===")
+          EOF
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/*.csv photos/
+          git commit -m "Add quiz entry from issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Close issue with success comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ Quiz entry has been successfully added to the website!\n\nThe changes have been committed and the site will update shortly.'
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });

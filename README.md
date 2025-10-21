@@ -1,3 +1,41 @@
+# The Big Quiz Website
+
+This repository hosts the Gorsko Slivovo team's quiz results website on GitHub Pages.
+
+---
+
+# 🚀 Quick Way to Add Quiz Entries (Mobile-Friendly!)
+
+**NEW!** You can now add quiz entries directly from your phone using GitHub Issues:
+
+## How to Add a Quiz Entry
+
+1. **Go to the Issues tab** on GitHub (works great on mobile!)
+2. **Click "New Issue"**
+3. **Select "Add Quiz Entry"** template
+4. **Fill out the form:**
+   - Quiz date (DD.MM.YYYY format, e.g., 20.10.2025)
+   - Notes about the quiz
+   - Points scored (2-5)
+   - Total number of teams
+   - Our place/position
+   - Check attendance for each team member
+   - **Upload photos** by dragging/dropping or pasting them into the Photos field
+5. **Submit the issue**
+
+That's it! A GitHub Action will automatically:
+- ✅ Create a `photos/YYYY-MM-DD/` folder with your photos
+- ✅ Add a new row to `data/season-2025.csv`
+- ✅ Add a new row to `data/presence.csv`
+- ✅ Close the issue when done
+
+The website will update within a few minutes!
+
+### Direct Link
+[**📝 Add Quiz Entry**](../../issues/new?template=add-quiz.yml)
+
+---
+
 # Quick Access to Important Files
 
 The dashboard includes a "Quick Access to Important Files" section that displays helpful links and resources.
