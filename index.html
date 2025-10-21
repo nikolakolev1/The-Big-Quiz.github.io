@@ -509,10 +509,6 @@
             style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em">Season</span>
           <select id="seasonSelect"></select>
         </label>
-        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px">
-          <button id="refreshBtn" class="btn secondary" title="Clear cached data and reload from repo">Refresh data</button>
-          <div id="seasonLabel" class="subtitle" style="font-size:12px; opacity:.9">Season info</div>
-        </div>
       </div>
     </div>
   </header>
@@ -868,7 +864,11 @@
     function renderSeasons() {
       const years = Object.keys(state.seasons).sort((a, b) => b.localeCompare(a));
       seasonSelect.innerHTML = years.map(y => `<option value="${y}" ${y === state.currentSeason ? 'selected' : ''}>${y}</option>`).join('');
-      $('#seasonLabel').textContent = `Season ${state.currentSeason} · ${state.seasons[state.currentSeason].quizzes.length} quizzes`;
+      // The compact season label in the header was removed; update it only if present
+      const lbl = $('#seasonLabel');
+      if (lbl && state.seasons && state.seasons[state.currentSeason]) {
+        lbl.textContent = `Season ${state.currentSeason} · ${state.seasons[state.currentSeason].quizzes.length} quizzes`;
+      }
     }
 
     function getSeason() { return state.seasons[state.currentSeason]; }
@@ -1023,14 +1023,6 @@
     // Note: the interactive add/edit form was removed to simplify this build.
     seasonSelect.addEventListener('change', async () => { state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
 
-    // Allow the user to clear the local cached copy and fetch fresh data from the repo.
-    $('#refreshBtn').addEventListener('click', async () => {
-      try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
-      toast('Cleared cached data — loading fresh');
-      const year = state.currentSeason || String(new Date().getFullYear());
-      await tryLoadCSVForSeason(year);
-      renderAll();
-    });
 
     // ---------- Toast & Confetti ----------
     function toast(msg) { const t = $('#toast'); if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); } else { console.log('Toast:', msg); } }
