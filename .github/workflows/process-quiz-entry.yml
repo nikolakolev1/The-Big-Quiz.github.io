@@ -2,7 +2,7 @@ name: Process Quiz Entry
 
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   process-quiz:
@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
       issues: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
