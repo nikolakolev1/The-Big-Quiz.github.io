@@ -431,6 +431,63 @@
     .photo-nav.prev { left: 10px; }
     .photo-nav.next { right: 10px; }
     .photo-caption { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+
+    /* Quick Access */
+    .quick-access-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .quick-access-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 10px;
+      background: rgba(10, 20, 40, .6);
+      cursor: pointer;
+      transition: all .15s ease;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .quick-access-item:hover {
+      background: rgba(20, 30, 50, .8);
+      border-color: rgba(255, 255, 255, .12);
+      transform: translateX(2px);
+    }
+    .quick-access-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, .1);
+      background: #0c1330;
+    }
+    .quick-access-link-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(139, 92, 246, .2), rgba(34, 211, 238, .2));
+      border: 1px solid rgba(255, 255, 255, .1);
+      font-size: 18px;
+    }
+    .quick-access-name {
+      flex: 1;
+      font-weight: 500;
+    }
+    .quick-access-empty {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 12px 0;
+    }
   </style>
 </head>
 
@@ -484,17 +541,13 @@
         </div>
       </div>
 
-      <!-- Quick Access panel (replaces Season Snapshot) -->
-      <div class="panel" id="quickAccessPanel">
+      <!-- Quick Access to Important Files -->
+      <div class="panel">
         <div class="head">
           <h2>Quick Access to Important Files</h2>
-          <div class="subtitle" id="quickLabel">Photos & links for prep</div>
         </div>
         <div class="body">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px">
-            <div class="subtitle">Read-only list of photos & links from the repo (edit via GitHub)</div>
-          </div>
-          <div id="quickList" aria-live="polite"></div>
+          <ul class="quick-access-list" id="quickAccessList"></ul>
         </div>
       </div>
     </section>
@@ -509,6 +562,15 @@
         <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
       </div>
       <div class="body" id="quizHistory"></div>
+    </section>
+
+    <!-- Season stats / next quiz -->
+    <section class="panel">
+      <div class="head">
+        <h2>Season Snapshot</h2>
+        <div class="subtitle" id="seasonLabel"></div>
+      </div>
+      <div class="body" id="seasonStats"></div>
     </section>
   </main>
 
@@ -820,6 +882,15 @@
 
     function getSeason() { return state.seasons[state.currentSeason]; }
 
+    function computeNextMonday() {
+      const now = new Date();
+      const day = now.getDay();
+      const daysUntilMonday = day === 0 ? 1 : day === 1 ? 7 : (8 - day);
+      const next = new Date(now);
+      next.setDate(now.getDate() + daysUntilMonday);
+      return next;
+    }
+
     function computeLeaderboard() {
       const s = getSeason();
       const quizzes = s.quizzes || [];
@@ -927,6 +998,36 @@
         </div>`;
     }
 
+    function renderQuickAccess() {
+      const list = $('#quickAccessList');
+      // Demo quick access items - can be customized or loaded from data
+      const quickAccessItems = [
+        { type: 'link', name: 'The Big Quiz @ The Academy', url: 'https://www.facebook.com/TheBigQuizUK', icon: '🔗' },
+        { type: 'link', name: 'Quiz Rules & Format', url: 'https://www.thebigquiz.co.uk/', icon: '📋' },
+        { type: 'photo', name: 'Team Photo Album', url: 'photos/2025-10-20/IMG_2821.jpeg', thumbnail: 'photos/2025-10-20/IMG_2821.jpeg' }
+      ];
+      
+      if (!quickAccessItems || quickAccessItems.length === 0) {
+        list.innerHTML = '<li class="quick-access-empty">No quick access items yet</li>';
+        return;
+      }
+
+      list.innerHTML = quickAccessItems.map(item => {
+        if (item.type === 'photo') {
+          return `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="quick-access-item">
+            <img src="${item.thumbnail || item.url}" alt="${item.name}" class="quick-access-icon">
+            <span class="quick-access-name">${item.name}</span>
+          </a>`;
+        } else {
+          // link type
+          return `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="quick-access-item">
+            <div class="quick-access-link-icon">${item.icon || '🔗'}</div>
+            <span class="quick-access-name">${item.name}</span>
+          </a>`;
+        }
+      }).join('');
+    }
+
     // ---------- Events ----------
     // Note: the interactive add/edit form was removed to simplify this build.
     seasonSelect.addEventListener('change', async () => { state.currentSeason = seasonSelect.value; save(state); await tryLoadCSVForSeason(state.currentSeason); renderAll(); });
@@ -971,8 +1072,8 @@
     tick();
 
     // ---------- Boot ----------
-    async function renderAll() { renderSeasons(); renderLeaderboard(); renderHistory(); renderSeasonStats(); renderQuickAccess(); }
-    (async () => { await tryLoadCSVForSeason(state.currentSeason); await loadQuickResources(); renderAll(); })();
+    async function renderAll() { renderSeasons(); renderLeaderboard(); renderQuickAccess(); renderHistory(); renderSeasonStats(); }
+    (async () => { await tryLoadCSVForSeason(state.currentSeason); renderAll(); })();
 
     // ---------- Photo modal logic ----------
     const photoModal = document.getElementById('photoModal');
