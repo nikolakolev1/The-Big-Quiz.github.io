@@ -32,7 +32,11 @@ That's it! A GitHub Action will automatically:
 The website will update within a few minutes!
 
 ### Direct Link
-[**📝 Add Quiz Entry**](../../issues/new?template=add-quiz.yml)
+[**📝 Add Quiz Entry**](../../issues/new?template=add-quiz.yml) ← Click here to add a new quiz!
+
+### Additional Resources
+- [📖 Complete Guide](.github/QUIZ_ENTRY_GUIDE.md) - Detailed instructions and troubleshooting
+- [📋 Workflow Example](.github/WORKFLOW_EXAMPLE.md) - See exactly what happens step-by-step
 
 ---
 

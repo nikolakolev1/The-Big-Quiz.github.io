@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Quiz Entry Guide
+    url: https://github.com/nikolakolev1/The-Big-Quiz.github.io/blob/main/.github/QUIZ_ENTRY_GUIDE.md
+    about: Read the complete guide for adding quiz entries
