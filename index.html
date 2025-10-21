@@ -472,23 +472,23 @@
         </div>
       </div>
 
-      <!-- Season stats / next quiz -->
+      <!-- Quiz History -->
       <div class="panel">
         <div class="head">
-          <h2>Season Snapshot</h2>
-          <div class="subtitle" id="seasonLabel"></div>
+          <h2>Quiz History</h2>
+          <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
         </div>
-        <div class="body" id="seasonStats"></div>
+        <div class="body" id="quizHistory"></div>
       </div>
     </section>
 
-    <!-- Quiz History -->
+    <!-- Season stats / next quiz -->
     <section class="panel">
       <div class="head">
-        <h2>Quiz History</h2>
-        <div class="subtitle">Each entry: place, points (2–5) and number of teams we competed against</div>
+        <h2>Season Snapshot</h2>
+        <div class="subtitle" id="seasonLabel"></div>
       </div>
-      <div class="body" id="quizHistory"></div>
+      <div class="body" id="seasonStats"></div>
     </section>
   </main>
 
@@ -709,6 +709,15 @@
     }
 
     function getSeason() { return state.seasons[state.currentSeason]; }
+
+    function computeNextMonday() {
+      const now = new Date();
+      const day = now.getDay();
+      const daysUntilMonday = day === 0 ? 1 : day === 1 ? 7 : (8 - day);
+      const next = new Date(now);
+      next.setDate(now.getDate() + daysUntilMonday);
+      return next;
+    }
 
     function computeLeaderboard() {
       const s = getSeason();
