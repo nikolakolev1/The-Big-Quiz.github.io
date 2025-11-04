@@ -134,6 +134,23 @@
     </div>
   </div>
 
+  <!-- Presence modal: shows quizzes a team member attended -->
+  <div id="presenceModal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="presenceModalTitle">
+      <div class="head">
+        <h3 id="presenceModalTitle" style="margin:0">Attendance</h3>
+        <div style="display:flex; gap:8px">
+          <button id="presenceModalClose" class="btn secondary">Close</button>
+        </div>
+      </div>
+      <div class="body">
+        <div id="presenceModalBody" class="presence-modal-body">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript -->
   <script src="scripts.js"></script>
 </body>

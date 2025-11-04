@@ -653,6 +653,9 @@ function parsePresenceCSV(text) {
     counts[name] = 0;
   });
   
+  // Also keep per-date attendance rows for later lookup (date -> { name: true/false })
+  const rows = [];
+
   // Parse each attendance row
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
@@ -660,17 +663,24 @@ function parsePresenceCSV(text) {
       continue;
     }
     const cols = splitCSVLine(line);
-    
+    const dateRaw = (cols[0] || '').trim();
+    const normalizedDate = normalizeDate(dateRaw) || dateRaw; // keep original if normalization fails
+    const attendance = {};
+
     // Skip the date column (first column) and count "yes" values
     for (let j = 1; j < cols.length && j <= teamMembers.length; j++) {
       const value = (cols[j] || '').trim().toLowerCase();
-      if (value === 'yes') {
-        counts[teamMembers[j - 1]]++;
+      const present = value === 'yes';
+      const memberName = teamMembers[j - 1];
+      attendance[memberName] = present;
+      if (present) {
+        counts[memberName]++;
       }
     }
+    rows.push({ date: normalizedDate, rawDate: dateRaw, attendance });
   }
   
-  return { teamMembers, counts };
+  return { teamMembers, counts, rows };
 }
 
 /**
@@ -696,9 +706,10 @@ function renderTeamPresence() {
   const barsHtml = sortedMembers.map(name => {
     const count = counts[name];
     const percentage = (count / maxCount) * 100;
+    // Render the name as a focusable div (role=button) instead of a <button>
     return `
       <div class="presence-bar-item">
-        <div class="presence-name">${name}</div>
+        <div class="presence-name" role="button" tabindex="0" data-member="${escapeHtml(name)}">${escapeHtml(name)}</div>
         <div class="presence-bar-container">
           <div class="presence-bar" style="width: ${percentage}%">
             <span class="presence-count">${count}</span>
@@ -707,7 +718,7 @@ function renderTeamPresence() {
       </div>
     `;
   }).join('');
-  
+
   container.innerHTML = `
     <div class="head">
       <h2>Team Member Presence</h2>
@@ -720,7 +731,106 @@ function renderTeamPresence() {
     </div>
     <div class="subtitle">Notable mentions - Kalin, Magi, Dari</div>
   `;
+
+  // Attach click handlers for the member elements and support keyboard activation
+  $$('.presence-name').forEach(el => {
+    el.addEventListener('click', (e) => {
+      const name = e.currentTarget.dataset.member;
+      openPresenceModal(name);
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const name = e.currentTarget.dataset.member;
+        openPresenceModal(name);
+      }
+    });
+  });
 }
+
+/**
+ * Escape a string for HTML insertion (minimal safe escaping)
+ */
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Open the presence modal for a specific team member and show attended quizzes
+ * @param {string} memberName
+ */
+function openPresenceModal(memberName) {
+  if (!presenceData) return;
+  const modal = document.getElementById('presenceModal');
+  const body = document.getElementById('presenceModalBody');
+  const title = document.getElementById('presenceModalTitle');
+  title.textContent = `Attendance — ${memberName}`;
+
+  // Compute which quizzes (dates) this member attended by cross-referencing season quizzes and presence rows
+  const season = getSeason();
+  const quizzes = (season.quizzes || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const attended = [];
+
+  // Presence rows are parsed with normalized dates; match by date (YYYY-MM-DD) or original raw if necessary
+  const rowsByDate = {};
+  presenceData.rows.forEach(r => { rowsByDate[r.date] = r; rowsByDate[r.rawDate] = r; });
+
+  quizzes.forEach(q => {
+    const row = rowsByDate[q.date] || rowsByDate[q.date.replace(/^0+/, '')] || null;
+    // Also try matching by localized form (e.g., 03.11.2025) by comparing normalized original
+    let present = false;
+    if (row && row.attendance && typeof row.attendance[memberName] !== 'undefined') {
+      present = !!row.attendance[memberName];
+    } else {
+      // Fallback: try to find any row where rawDate normalizes to q.date
+      for (const r of presenceData.rows) {
+        if (normalizeDate(r.rawDate) === q.date && typeof r.attendance[memberName] !== 'undefined') {
+          present = !!r.attendance[memberName];
+          break;
+        }
+      }
+    }
+    if (present) {
+      attended.push(q);
+    }
+  });
+
+  if (!attended.length) {
+    body.innerHTML = `<div class="subtitle">No quizzes attended in the current season were found for ${escapeHtml(memberName)}.</div>`;
+  } else {
+    body.innerHTML = `<ul class="presence-attended-list">${attended.map(q => `<li><button class="link-like" data-date="${q.date}">${new Date(q.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</button> — ${escapeHtml(q.notes || '')} (${fmt(q.points || 0)} pts)</li>`).join('')}</ul>`;
+  }
+
+  // Make dates clickable to open photo gallery if photos exist
+  body.querySelectorAll('button[data-date]').forEach(b => {
+    b.addEventListener('click', (e) => {
+      const date = e.currentTarget.dataset.date;
+      openGalleryFor(date, 0);
+      closePresenceModal();
+    });
+  });
+
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePresenceModal() {
+  const modal = document.getElementById('presenceModal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+// Presence modal close button hookup
+document.getElementById('presenceModalClose')?.addEventListener('click', closePresenceModal);
+// Close when clicking backdrop
+document.getElementById('presenceModal')?.addEventListener('click', (e) => { if (e.target.id === 'presenceModal') closePresenceModal(); });
 
 // ---------- Main Rendering & Initialization ----------
 /**
