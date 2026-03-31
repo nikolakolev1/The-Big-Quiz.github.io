@@ -1,0 +1,41 @@
+name: Assign Photos to Quiz
+description: Add photos to an already created quiz entry
+labels: ['assign-photos']
+title: 'Assign photos: {{date}}'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Assign photos to an existing quiz
+        Use this form to add or update photos for a quiz that has already been recorded. The photos will be placed in the correct folder and the quiz row in the CSV will be updated automatically.
+
+        **Note:** After submitting, a GitHub Action will process your request. Please attach all photos in the "Photos" section below.
+
+  - type: input
+    id: date
+    attributes:
+      label: Quiz Date
+      description: Enter the date of the existing quiz in DD.MM.YYYY format (e.g., 20.10.2025)
+      placeholder: "20.10.2025"
+    validations:
+      required: true
+
+  - type: textarea
+    id: photos
+    attributes:
+      label: Photos
+      description: |
+        Drag and drop or paste your quiz photos here. All photos will be automatically added to the folder for the selected quiz date.
+        You can attach multiple photos at once.
+      placeholder: "Drag and drop photos here or click to upload"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        After submitting, the GitHub Action will:
+        1. Add the photos to `photos/YYYY-MM-DD/` (numbering after any existing photos)
+        2. Update the photo references in `data/season-2025.csv` for the matching quiz row
+        3. Close this issue automatically

@@ -1,0 +1,252 @@
+name: Assign Photos to Quiz
+
+on:
+  issues:
+    types: [ opened, labeled ]
+  workflow_dispatch: { }
+
+jobs:
+  assign-photos:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: Check event & debug payload
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const action = context.payload.action;
+            const label = context.payload.label ? context.payload.label.name : null;
+            const issueLabels = context.payload.issue && context.payload.issue.labels ? context.payload.issue.labels.map(l => l.name) : [];
+            const body = context.payload.issue && context.payload.issue.body ? context.payload.issue.body : '';
+            console.log('event.action=', action);
+            console.log('event.label=', label);
+            console.log('issue.labels=', issueLabels);
+            // treat as assign-photos if labeled or if opened and the form marker exists in the body
+            const hasAssignPhotosLabel = issueLabels.includes('assign-photos');
+            const hasAssignPhotosFormFields = /###\s*Quiz Date/i.test(body) && /###\s*Photos/i.test(body) && !/###\s*Notes/i.test(body);
+            const isAssignPhotos =
+              (action === 'labeled' && label === 'assign-photos') ||
+              (action === 'opened' && (hasAssignPhotosLabel || hasAssignPhotosFormFields));
+            if (!isAssignPhotos) {
+              core.setFailed('Not an assign-photos event — aborting. Check the event payload in the run details.');
+            }
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Parse issue and assign photos to quiz
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 << 'EOF'
+          import os
+          import re
+          import json
+          import csv
+          import io
+          import glob as globmod
+          from pathlib import Path
+          import urllib.request
+
+          issue_body = os.environ['ISSUE_BODY']
+          issue_number = os.environ['ISSUE_NUMBER']
+          github_token = os.environ['GITHUB_TOKEN']
+          repo = os.environ['REPO']
+
+          print("=== Parsing issue body ===")
+          print(issue_body)
+          print("========================")
+
+          # Extract fields from issue body
+          def extract_field(body, field_name):
+              pattern = rf'### {field_name}\s*\n\s*(.+?)(?=\n###|\Z)'
+              match = re.search(pattern, body, re.DOTALL | re.IGNORECASE)
+              if match:
+                  value = match.group(1).strip()
+                  if value == "_No response_":
+                      return ""
+                  return value
+              return ""
+
+          date_str = extract_field(issue_body, "Quiz Date")
+
+          print(f"Date: {date_str}")
+
+          if not date_str:
+              print("ERROR: Missing required field: Quiz Date")
+              exit(1)
+
+          # Parse date from DD.MM.YYYY to YYYY-MM-DD
+          try:
+              date_parts = date_str.strip().split('.')
+              if len(date_parts) == 3:
+                  day, month, year = date_parts
+                  if not (year.isdigit() and 2000 <= int(year) <= 2100):
+                      print(f"ERROR: Year out of expected range (2000-2100): {year}")
+                      exit(1)
+                  date_normalized = f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
+                  folder_date = date_normalized
+              else:
+                  print(f"ERROR: Invalid date format: {date_str}")
+                  exit(1)
+          except Exception as e:
+              print(f"ERROR: Failed to parse date: {e}")
+              exit(1)
+
+          print(f"Normalized date: {date_normalized}")
+          print(f"Folder name: {folder_date}")
+
+          # Determine starting index for new photos (avoid overwriting existing ones)
+          photos_dir = f"photos/{folder_date}"
+          os.makedirs(photos_dir, exist_ok=True)
+          existing_photos = sorted(globmod.glob(f"{photos_dir}/photo-*.jpg") +
+                                   globmod.glob(f"{photos_dir}/photo-*.jpeg") +
+                                   globmod.glob(f"{photos_dir}/photo-*.png") +
+                                   globmod.glob(f"{photos_dir}/photo-*.gif") +
+                                   globmod.glob(f"{photos_dir}/photo-*.webp"))
+          # Find the highest existing index
+          max_index = 0
+          for p in existing_photos:
+              m = re.search(r'photo-(\d+)\.', os.path.basename(p))
+              if m:
+                  max_index = max(max_index, int(m.group(1)))
+          next_index = max_index + 1
+          print(f"Existing photos: {len(existing_photos)}, next index: {next_index}")
+
+          # Extract photo URLs from issue body
+          print("\n=== Fetching issue details for photos ===")
+          photo_urls = re.findall(r'!\[.*?\]\((https://[^\)]+)\)', issue_body)
+          photo_urls.extend(re.findall(
+              r'https://(?:user-images\.githubusercontent\.com|github\.com/.*?/assets)/[^\s\)]+\.(?:jpg|jpeg|png|gif|webp)',
+              issue_body, re.IGNORECASE))
+          photo_urls = list(dict.fromkeys(photo_urls))  # deduplicate, preserving order
+
+          print(f"Found {len(photo_urls)} photos in issue")
+          for url in photo_urls:
+              print(f"  - {url}")
+
+          if not photo_urls:
+              print("ERROR: No photos found in the issue. Please attach at least one photo.")
+              exit(1)
+
+          # Download photos
+          new_photo_filenames = []
+          for i, url in enumerate(photo_urls, next_index):
+              try:
+                  ext_match = re.search(r'\.(jpg|jpeg|png|gif|webp)(\?|$)', url, re.IGNORECASE)
+                  ext = ext_match.group(1).lower() if ext_match else 'jpg'
+                  filename = f"photo-{i}.{ext}"
+                  filepath = os.path.join(photos_dir, filename)
+                  print(f"Downloading {url} to {filepath}")
+                  urllib.request.urlretrieve(url, filepath)
+                  new_photo_filenames.append(f"{photos_dir}/{filename}")
+                  print(f"  ✓ Downloaded: {filename}")
+              except Exception as e:
+                  print(f"  ✗ Failed to download photo {i}: {e}")
+
+          if not new_photo_filenames:
+              print("ERROR: All photo downloads failed.")
+              exit(1)
+
+          print(f"\nNew photos saved: {new_photo_filenames}")
+
+          # Update season-2025.csv — find the row matching the quiz date and append photos
+          # Columns: date, notes, points, teams, place, photos
+          season_file = "data/season-2025.csv"
+          print(f"\n=== Updating {season_file} ===")
+
+          try:
+              with open(season_file, 'r', encoding='utf-8-sig', newline='') as f:
+                  content = f.read()
+
+              lines = content.rstrip('\n').split('\n')
+              updated = False
+
+              for idx, line in enumerate(lines):
+                  if idx == 0:
+                      continue  # skip header
+                  reader = csv.reader(io.StringIO(line))
+                  row_parts = next(reader)
+                  # row_parts[0] is the date field (DD.MM.YYYY)
+                  if not row_parts or row_parts[0].strip() != date_str.strip():
+                      continue
+                  print(f"Found matching row at line {idx}: {line}")
+                  # Ensure the row has all 6 columns: date, notes, points, teams, place, photos
+                  while len(row_parts) < 6:
+                      row_parts.append("")
+                  existing_photos_str = row_parts[5].strip()
+                  if existing_photos_str:
+                      all_photos = existing_photos_str + "; " + "; ".join(new_photo_filenames)
+                  else:
+                      all_photos = "; ".join(new_photo_filenames)
+                  row_parts[5] = all_photos
+                  # Reconstruct the line with proper CSV quoting
+                  out = io.StringIO()
+                  writer = csv.writer(out, quoting=csv.QUOTE_MINIMAL)
+                  writer.writerow(row_parts)
+                  new_line = out.getvalue().strip()
+                  lines[idx] = new_line
+                  updated = True
+                  print(f"Updated row: {new_line}")
+                  break
+
+              if not updated:
+                  print(f"ERROR: No quiz found for date {date_str} in {season_file}")
+                  exit(1)
+
+              with open(season_file, 'w', encoding='utf-8', newline='') as f:
+                  f.write('\n'.join(lines) + '\n')
+
+              print(f"✓ Updated {season_file}")
+          except Exception as e:
+              print(f"ERROR: Failed to update {season_file}: {e}")
+              exit(1)
+
+          # Export the normalized date so the commit step can use it
+          github_env = os.environ.get('GITHUB_ENV', '')
+          if github_env:
+              with open(github_env, 'a') as env_file:
+                  env_file.write(f"QUIZ_DATE={date_normalized}\n")
+
+          print("\n=== ✓ All updates completed successfully ===")
+          EOF
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add photos/
+          git add data/season-2025.csv
+          git commit -m "Assign photos to quiz for ${{ env.QUIZ_DATE }} (issue #${{ github.event.issue.number }})"
+          git push
+
+      - name: Close issue with success comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '✅ Photos have been successfully assigned to the quiz!\n\nThe changes have been committed and the site will update shortly.'
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
